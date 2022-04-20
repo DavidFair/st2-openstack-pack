@@ -70,6 +70,6 @@ class TestActionProject(OpenstackActionTestCase):
         """
         self.identity_mock.delete_project.return_value = True
         returned_values = self.action.project_delete(
-            NonCallableMock(), NonCallableMock(), NonCallableMock()
+            NonCallableMock(), NonCallableMock()
         )
         assert returned_values == (True, "")

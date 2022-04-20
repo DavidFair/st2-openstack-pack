@@ -34,22 +34,14 @@ class OpenstackIdentity:
             )
 
     @staticmethod
-    def delete_project(cloud_account: str, project_details: ProjectDetails) -> bool:
+    def delete_project(cloud_account: str, project_identifier: str) -> bool:
         """
         :param cloud_account: The clouds entry to use
-        :param project_details: A datastructure containing all the project details
+        :param project_identifier: The name or Openstack ID for the project
         :return: True if the project was deleted, False if the operation failed
         """
-        proj_identifier = (
-            project_details.name.strip() if project_details.name.strip() else None
-        )
-        proj_identifier = (
-            project_details.openstack_id.strip()
-            if project_details.openstack_id
-            else proj_identifier
-        )
-
-        if not proj_identifier:
+        project_identifier = project_identifier.strip()
+        if not project_identifier:
             raise MissingMandatoryParamError(
                 "A project name or project ID must be provided"
             )
@@ -58,7 +50,7 @@ class OpenstackIdentity:
         with OpenstackConnection(cloud_account) as conn:
             try:
                 result = conn.identity.delete_project(
-                    project=proj_identifier, ignore_missing=ignore_missing
+                    project=project_identifier, ignore_missing=ignore_missing
                 )
                 return result is None  # Where None == success
             except ResourceNotFound:

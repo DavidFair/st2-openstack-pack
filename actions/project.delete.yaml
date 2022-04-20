@@ -13,12 +13,9 @@ parameters:
     default: ''
     required: true
     type: string
-  project_name:
-    description: Project Name to delete
+  project_identifier:
+    description: Project Name or Openstack ID to delete
     type: string
     default: ''
-  project_id:
-    description: Project ID to delete, this takes preference over name
-    type: string
-    default: ''
+    required: true
 runner_type: python-script

@@ -26,7 +26,7 @@ class ProjectAction(OpenstackAction):
         }
 
     def project_delete(
-        self, cloud_account: str, project_name: Optional[str], project_id: Optional[str]
+        self, cloud_account: str, project_identifier: str
     ) -> Tuple[bool, str]:
         """
         Deletes a project
@@ -36,8 +36,7 @@ class ProjectAction(OpenstackAction):
         :return: The result of the operation
         """
         delete_ok = self._api.delete_project(
-            cloud_account=cloud_account,
-            project_details=ProjectDetails(name=project_name, openstack_id=project_id),
+            cloud_account=cloud_account, project_identifier=project_identifier
         )
         # Currently, we only handle one error, other throws will propagate upwards
         err = "" if delete_ok else "The specified result was not found"

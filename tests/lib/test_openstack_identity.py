@@ -67,8 +67,7 @@ class OpenstackIdentityTests(unittest.TestCase):
         Test that if the user doesn't provide meaningful args to delete we throw
         """
         # Intentional spaces
-        details = ProjectDetails(name=" ", openstack_id=" ")
-        OpenstackIdentity().delete_project("", details)
+        OpenstackIdentity().delete_project("", project_identifier=" \t")
 
     def test_delete_project_successful_with_name_or_id(self):
         """
@@ -77,42 +76,15 @@ class OpenstackIdentityTests(unittest.TestCase):
         """
         instance = OpenstackIdentity()
         self.identity_api.delete_project.return_value = None
-        for details in [
-            ProjectDetails(name=NonCallableMock()),
-            ProjectDetails(name="", openstack_id=NonCallableMock()),
-        ]:
 
-            result = instance.delete_project(
-                cloud_account="test", project_details=details
-            )
-
-            assert result is True
-            expected_param = (
-                details.name.strip() if details.name else details.openstack_id.strip()
-            )
-            self.identity_api.delete_project.assert_called_once_with(
-                project=expected_param, ignore_missing=False
-            )
-            self.identity_api.delete_project.reset_mock()
-
-    def test_delete_project_uses_id_over_name(self):
-        """
-        Checks an ID is used over a project name, this is generally safer
-        as it's a UUID so hard to mistype
-        """
-        instance = OpenstackIdentity()
-        expected_details = ProjectDetails(
-            name=NonCallableMock(), openstack_id=NonCallableMock()
-        )
-        self.identity_api.delete_project.return_value = None
-
+        identifier = NonCallableMock()
         result = instance.delete_project(
-            cloud_account="test", project_details=expected_details
+            cloud_account="test", project_identifier=identifier
         )
 
         assert result is True
         self.identity_api.delete_project.assert_called_once_with(
-            project=expected_details.openstack_id.strip(), ignore_missing=False
+            project=identifier.strip(), ignore_missing=False
         )
 
     def test_delete_project_handles_resource_not_found(self):
@@ -123,5 +95,5 @@ class OpenstackIdentityTests(unittest.TestCase):
         """
         instance = OpenstackIdentity()
         self.identity_api.delete_project.side_effect = ResourceNotFound
-        result = instance.delete_project("", ProjectDetails(name="test"))
+        result = instance.delete_project("", project_identifier="test")
         assert result is False
