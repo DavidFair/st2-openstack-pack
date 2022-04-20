@@ -25,13 +25,23 @@ class ProjectAction(OpenstackAction):
             "project_delete": self.project_delete,
         }
 
-    def project_delete(self, project):
+    def project_delete(
+        self, cloud_account: str, project_name: Optional[str], project_id: Optional[str]
+    ) -> Tuple[bool, str]:
         """
-        Delete a project
-        :param project: project Name or ID
-        :return: (status (Bool), reason (String))
+        Deletes a project
+        :param: cloud_account: The account from the clouds configuration to use
+        :param: project_name: (Either) The project name to delete
+        :param: project_id: (Either) The project ID to delete
+        :return: The result of the operation
         """
-        raise NotImplementedError
+        delete_ok = self._api.delete_project(
+            cloud_account=cloud_account,
+            project_details=ProjectDetails(name=project_name, openstack_id=project_id),
+        )
+        # Currently, we only handle one error, other throws will propagate upwards
+        err = "" if delete_ok else "The specified result was not found"
+        return delete_ok, err
 
     def project_show(self, cloud_account: str, domain: str, project: str):
         """
@@ -70,11 +80,7 @@ class ProjectAction(OpenstackAction):
         :return: status, optional project
         """
         details = ProjectDetails(
-            name=name,
-            description=description,
-            # This is intentionally hard-coded as it's very rare we create something in another domain
-            domain_id="default",
-            is_enabled=is_enabled,
+            name=name, description=description, is_enabled=is_enabled
         )
         project = self._api.create_project(
             cloud_account=cloud_account, project_details=details
