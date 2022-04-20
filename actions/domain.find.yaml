@@ -12,6 +12,7 @@ parameters:
     description: The clouds.yaml account to use whilst performing this action
     default: ''
     type: string
+    required: true
   domain:
     description: Project domain (name or ID) default - default
     default: default

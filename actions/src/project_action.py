@@ -1,10 +1,14 @@
+from typing import Tuple, Optional
+
 from openstack.exceptions import ResourceNotFound
+from openstack.identity.v3.project import Project
 
 from openstack_action import OpenstackAction
 from openstack_identity import OpenstackIdentity
+from structs.create_project import ProjectDetails
 
 
-class Project(OpenstackAction):
+class ProjectAction(OpenstackAction):
     def __init__(self, *args, **kwargs):
         """constructor class"""
         super().__init__(*args, **kwargs)
@@ -49,26 +53,31 @@ class Project(OpenstackAction):
             return False, f"Finding Project Failed {err}"
         return True, project
 
-    def project_create(self, domain, name, description, is_enabled):
+    def project_create(
+        self,
+        cloud_account: str,
+        domain_id: str,
+        name: str,
+        description: str,
+        is_enabled: bool,
+    ) -> Tuple[bool, Optional[Project]]:
         """
-        find and return a given project's properties
-        :param domain: (String) Name or ID,
-        :param name: (String) Name of new project
-        :param description: (String) Description for new project
-        :param is_enabled: (Bool) Set if new project enabled or disabled
-        :return: (status (Bool), reason (String))
+        Find and return a given project's properties. Expected
+        to be called within a workflow and not directly.
+        :param: cloud_account: The account from the clouds configuration to use
+        :param: domain_id: Openstack domain ID
+        :param: name: Name of new project
+        :param: description: Description for new project
+        :param: is_enabled: Set if new project enabled or disabled
+        :return: status, optional project
         """
-
-        domain_id = self.find_resource_id(domain, self.conn.identity.find_domain)
-        if not domain_id:
-            return False, f"No domain found with Name or ID {domain}"
-        try:
-            project = self.conn.identity.create_project(
-                domain_id=domain_id,
-                name=name,
-                description=description,
-                is_enabled=is_enabled,
-            )
-        except ResourceNotFound as err:
-            return False, f"Project Creation Failed {err}"
-        return True, project
+        details = ProjectDetails(
+            name=name,
+            description=description,
+            domain_id=domain_id,
+            is_enabled=is_enabled,
+        )
+        project = self._api.create_project(
+            cloud_account=cloud_account, project_details=details
+        )
+        return bool(project), project

@@ -1,16 +1,22 @@
 ---
 description: Create Openstack Project
 enabled: true
-entry_point: src/project.py
+entry_point: src/project_action.py
 name: project.create
 parameters:
   submodule:
     default: project_create
     immutable: true
     type: string
-  domain:
-    default: default
-    description: Domain owning the project (name or ID)
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  domain_id:
+    default: ''
+    description: Domain owning the project (Openstack UUID)
+    required: true
     type: string
   name:
     description: New project Name

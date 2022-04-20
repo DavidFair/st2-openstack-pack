@@ -2,3 +2,4 @@ openstacksdk
 python-openstackclient
 tabulate
 requests
+dataclasses; python_version < '3.7'
