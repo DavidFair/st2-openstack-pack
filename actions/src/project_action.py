@@ -42,8 +42,8 @@ class ProjectAction(OpenstackAction):
         :return: (status (Bool), reason (String))
         """
         raise NotImplementedError("Not implemented yet")
-        domain_id = self.find_domain(cloud_account, domain)
         # pylint: disable=unreachable
+        domain_id = self.find_domain(cloud_account, domain)
         if not domain_id:
             return False, f"No domain found with Name or ID {domain}"
         # TODO:
