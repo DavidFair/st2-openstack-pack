@@ -1,7 +1,7 @@
 ---
 description: Finds a given domain
 enabled: true
-entry_point: src/project.py
+entry_point: src/domain_action.py
 name: domain.find
 parameters:
   submodule:

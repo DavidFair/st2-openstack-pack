@@ -1,14 +1,14 @@
 from unittest.mock import create_autospec, NonCallableMock
 
 from openstack_identity import OpenstackIdentity
-from actions.src.project import Project
+from src.domain_action import DomainAction
 from tests.openstack_action_test_case import OpenstackActionTestCase
 
 
 class TestActionProject(OpenstackActionTestCase):
-    action_cls = Project
+    action_cls = DomainAction
 
-    def test_project_can_be_instantiated(self):
+    def test_domain_action_can_be_instantiated(self):
         """
         Tests the action can be instantiated without errors
         """
@@ -23,7 +23,7 @@ class TestActionProject(OpenstackActionTestCase):
         mock = create_autospec(OpenstackIdentity)
         mock.find_domain.return_value = expected
 
-        action: Project = self.get_action_instance(api_mock=mock)
+        action: DomainAction = self.get_action_instance(api_mock=mock)
         returned_values = action.find_domain("account", "foo")
         assert returned_values[0] is True
         assert returned_values[1] == expected
@@ -36,7 +36,7 @@ class TestActionProject(OpenstackActionTestCase):
         mock = create_autospec(OpenstackIdentity)
         mock.find_domain.return_value = None
 
-        action: Project = self.get_action_instance(api_mock=mock)
+        action: DomainAction = self.get_action_instance(api_mock=mock)
         returned_values = action.find_domain("account", "foo")
         assert returned_values[0] is False
         assert returned_values[1] is None

@@ -1,7 +1,4 @@
-from typing import Tuple, Optional
-
 from openstack.exceptions import ResourceNotFound
-from openstack.identity.v3.domain import Domain
 
 from openstack_action import OpenstackAction
 from openstack_identity import OpenstackIdentity
@@ -19,11 +16,9 @@ class Project(OpenstackAction):
 
         # lists possible functions that could be run as an action
         self.func = {
-            "domain_find": self.find_domain,
             "project_show": self.project_show,
             "project_create": self.project_create,
-            "project_delete": self.project_delete
-            # project_update
+            "project_delete": self.project_delete,
         }
 
     def project_delete(self, project):
@@ -34,29 +29,16 @@ class Project(OpenstackAction):
         """
         raise NotImplementedError
 
-    def find_domain(
-        self, cloud_account: str, domain: str
-    ) -> Tuple[bool, Optional[Domain]]:
-        """
-        find and return a given project's properties
-        :param cloud_account: The account from the clouds configuration to use
-        :param domain: Domain Name or ID
-        :return: (status (Bool), reason (String))
-        """
-        found_domain = self._api.find_domain(cloud_account=cloud_account, domain=domain)
-        return bool(found_domain), found_domain
-
     def project_show(self, cloud_account: str, domain: str, project: str):
         """
         find and return a given project's properties
         :param cloud_account: The account from the clouds configuration to use
         :param project:(String) Name or ID,
-        :param domain:(String) Domain Name or ID
+        :param domain:(String) DomainAction Name or ID
         :return: (status (Bool), reason (String))
         """
-
-        domain_id = self.find_domain(cloud_account, domain)
         raise NotImplementedError("Not implemented yet")
+        domain_id = self.find_domain(cloud_account, domain)
         # pylint: disable=unreachable
         if not domain_id:
             return False, f"No domain found with Name or ID {domain}"
