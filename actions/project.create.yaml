@@ -13,11 +13,6 @@ parameters:
     default: ''
     required: true
     type: string
-  domain_id:
-    default: ''
-    description: Domain owning the project (Openstack UUID)
-    required: true
-    type: string
   name:
     description: New project Name
     required: true

@@ -1,7 +1,6 @@
 from unittest.mock import create_autospec, NonCallableMock
 
 from openstack_identity import OpenstackIdentity
-from src.domain_action import DomainAction
 from src.project_action import ProjectAction
 from structs.create_project import ProjectDetails
 from tests.openstack_action_test_case import OpenstackActionTestCase
@@ -25,10 +24,10 @@ class TestActionProject(OpenstackActionTestCase):
         action: ProjectAction = self.get_action_instance(api_mock=mock)
 
         expected_proj_params = {
-            i: NonCallableMock()
-            for i in ["domain_id", "name", "description", "is_enabled"]
+            i: NonCallableMock() for i in ["name", "description", "is_enabled"]
         }
-        packaged_proj = ProjectDetails(**expected_proj_params)
+        # Check that default gets hard-coded in too
+        packaged_proj = ProjectDetails(**expected_proj_params, domain_id="default")
 
         returned_values = action.project_create(
             cloud_account="foo", **expected_proj_params
@@ -49,6 +48,6 @@ class TestActionProject(OpenstackActionTestCase):
         mock.create_project.return_value = None
 
         action: ProjectAction = self.get_action_instance(api_mock=mock)
-        returned_values = action.project_create(*{NonCallableMock() for _ in range(5)})
+        returned_values = action.project_create(*{NonCallableMock() for _ in range(4)})
         assert returned_values[0] is False
         assert returned_values[1] is None

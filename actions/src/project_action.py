@@ -56,7 +56,6 @@ class ProjectAction(OpenstackAction):
     def project_create(
         self,
         cloud_account: str,
-        domain_id: str,
         name: str,
         description: str,
         is_enabled: bool,
@@ -65,7 +64,6 @@ class ProjectAction(OpenstackAction):
         Find and return a given project's properties. Expected
         to be called within a workflow and not directly.
         :param: cloud_account: The account from the clouds configuration to use
-        :param: domain_id: Openstack domain ID
         :param: name: Name of new project
         :param: description: Description for new project
         :param: is_enabled: Set if new project enabled or disabled
@@ -74,7 +72,8 @@ class ProjectAction(OpenstackAction):
         details = ProjectDetails(
             name=name,
             description=description,
-            domain_id=domain_id,
+            # This is intentionally hard-coded as it's very rare we create something in another domain
+            domain_id="default",
             is_enabled=is_enabled,
         )
         project = self._api.create_project(
