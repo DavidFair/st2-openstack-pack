@@ -123,14 +123,18 @@ class NetworkActions(OpenstackAction):
         rbac = self._api.create_network_rbac(cloud_account, rbac_details)
         return bool(rbac), rbac
 
-    def network_delete(self, network, project):
+    def network_delete(
+        self, cloud_account: str, network_identifier: str
+    ) -> Tuple[bool, Optional[str]]:
         """
-        Delete a Network
-        :param network: Name or ID
-        :param project: Name or ID
-        :return: (status (Bool), reason (String))
+        Deletes the specified network
+        :param cloud_account: The account from the clouds.yaml configuration to use
+        :param network_identifier: The network name or Openstack ID to remove
+        :return: If the network was deleted, error message if any
         """
-        raise NotImplementedError
+        result = self._api.delete_network(cloud_account, network_identifier)
+        err = "" if result else "The selected network could not be found"
+        return result, err
 
     def network_rbac_delete(self, rbac_policy):
         """

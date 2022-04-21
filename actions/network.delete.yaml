@@ -8,12 +8,13 @@ parameters:
     default: network_delete
     immutable: true
     type: string
-  network:
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  network_identifier:
     default: Network Name or ID to delete
     type: string
     required: True
-  project:
-    description: Project which contains Network to delete (Name or ID)
-    required: True
-    type: string
 runner_type: python-script

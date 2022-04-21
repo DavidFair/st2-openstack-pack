@@ -118,3 +118,24 @@ class OpenstackNetworkTests(unittest.TestCase):
                     object_id=ANY, target_project_id=ANY, action=expected_val
                 )
                 self.network_api.create_rbac_policy.reset_mock()
+
+    def test_delete_network_forwards_find_network(self):
+        self.instance.find_network = Mock()
+        cloud, network_identifier = NonCallableMock(), NonCallableMock()
+        self.network_api.delete_network.return_value = None
+        result = self.instance.delete_network(cloud, network_identifier)
+
+        self.instance.find_network.assert_called_once_with(cloud, network_identifier)
+        self.network_api.delete_network.assert_called_once_with(
+            self.instance.find_network.return_value, ignore_missing=True
+        )
+        assert result is True
+
+    def test_delete_network_cant_find_network(self):
+        self.instance.find_network = Mock(return_value=None)
+        cloud, network_identifier = NonCallableMock(), NonCallableMock()
+        result = self.instance.delete_network(cloud, network_identifier)
+
+        assert result is False
+        self.instance.find_network.assert_called_once_with(cloud, network_identifier)
+        self.network_api.delete_network.assert_not_called()

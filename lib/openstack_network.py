@@ -92,3 +92,18 @@ class OpenstackNetwork:
                 target_project_id=project_id,
                 action=self._parse_rbac_action(rbac_details.action),
             )
+
+    def delete_network(self, cloud_account: str, network_identifier: str) -> bool:
+        """
+        Deletes the specified network
+        :param cloud_account: The associated credentials to use
+        :param network_identifier: The name or Openstack ID to use
+        :return: True if deleted, else False
+        """
+        network_id = self.find_network(cloud_account, network_identifier)
+        if not network_id:
+            return False
+
+        with OpenstackConnection(cloud_account) as conn:
+            result = conn.network.delete_network(network_id, ignore_missing=True)
+            return result is None

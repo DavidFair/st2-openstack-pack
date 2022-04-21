@@ -77,3 +77,14 @@ class TestNetworkActions(OpenstackActionTestCase):
             RbacNetworkActions.SHARED.value,
         )
         assert returned == (False, None)
+
+    def test_delete_network_success(self):
+        self.network_mock.delete_network.return_value = True
+        returned = self.action.network_delete(NonCallableMock(), NonCallableMock())
+        assert returned == (True, "")
+
+    def test_delete_network_failed(self):
+        self.network_mock.delete_network.return_value = False
+        returned = self.action.network_delete(NonCallableMock(), NonCallableMock())
+        assert returned[0] is False
+        assert "could not be found" in returned[1]
