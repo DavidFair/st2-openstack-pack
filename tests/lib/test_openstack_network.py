@@ -151,6 +151,16 @@ class OpenstackNetworkTests(unittest.TestCase):
             )
             assert returned == self.network_api.create_rbac_policy.return_value
 
+    @raises(KeyError)
+    def test_create_rbac_unknown_key(self):
+        """
+        Tests a key error is thrown in an unknown var is passed to the serialisation logic
+        """
+        rbac_details = NonCallableMock()
+        rbac_details.action = "unknown"
+        with patch("openstack_network.OpenstackIdentity"):
+            self.instance.create_network_rbac(NonCallableMock(), rbac_details)
+
     def test_create_rbac_serialises_enum_correctly(self):
         """
         Tests that the RBAC access maps from the internal enum to the

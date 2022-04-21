@@ -134,6 +134,23 @@ class TestNetworkActions(OpenstackActionTestCase):
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
+    def test_delete_rbac_success(self):
+        """
+        Tests the action returns success when a RBAC policy is deleted
+        """
+        self.network_mock.delete_network_rbac.return_value = True
+        returned = self.action.network_rbac_delete(NonCallableMock(), NonCallableMock())
+        assert returned == (True, "")
+
+    def test_delete_rbac_failed(self):
+        """
+        Tests the status and message when a policy isn't deleted
+        """
+        self.network_mock.delete_network_rbac.return_value = False
+        returned = self.action.network_rbac_delete(NonCallableMock(), NonCallableMock())
+        assert returned[0] is False
+        assert "could not be found" in returned[1]
+
     def test_run_method(self):
         """
         Tests that run can dispatch to the Stackstorm facing methods
