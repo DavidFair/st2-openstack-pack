@@ -1,12 +1,25 @@
 ---
 description: Create Network RBAC rule
 enabled: true
-entry_point: src/network_action.py
+entry_point: src/network_actions.py
 name: network.rbac.create
 parameters:
   submodule:
     default: network_rbac_create
     immutable: true
+    type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  project_identifier:
+    description: The project to which the RBAC policy will be enforced (name or ID)
+    required: true
+    type: string
+  network_identifier:
+    description: The network to which the RBAC policy will be enforced (name or ID)
+    required: true
     type: string
   rbac_action:
     description: Action for the RBAC policy ("access_as_external" or "access_as_shared")
@@ -15,12 +28,5 @@ parameters:
     enum:
       - shared
       - external
-  rbac_object:
-    description: The object to which this RBAC policy affects (name or ID)
-    required: true
-    type: string
-  target_project:
-    description: The project to which the RBAC policy will be enforced (name or ID)
-    required: true
-    type: string
+
 runner_type: python-script

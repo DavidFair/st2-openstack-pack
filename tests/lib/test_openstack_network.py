@@ -1,4 +1,5 @@
 import unittest
+from typing import Callable
 from unittest.mock import NonCallableMock, patch, Mock, ANY
 
 from nose.tools import raises
@@ -40,6 +41,40 @@ class OpenstackNetworkTests(unittest.TestCase):
         )
         assert returned == self.network_api.find_network.return_value
 
+    @raises(MissingMandatoryParamError)
+    def test_create_network_no_name(self):
+        mocked_details = NonCallableMock()
+        mocked_details.name = " \t"
+        self.instance.create_network(NonCallableMock(), mocked_details)
+
+    @raises(ItemNotFoundError)
+    def test_create_network_forwards_find_project(self):
+        self._run_project_not_found_test(
+            self.instance.create_network, NonCallableMock(), NonCallableMock()
+        )
+
+    def test_create_project_forwards_result(self):
+        with patch("openstack_network.OpenstackIdentity") as patched_ident:
+            cloud_account, details = NonCallableMock(), NonCallableMock()
+
+            returned = self.instance.create_network(cloud_account, details)
+            self.mocked_connection.assert_called_once_with(cloud_account)
+            self.network_api.create_network(
+                project_id=patched_ident.find_project.return_value,
+                name=details.name,
+                description=details.description,
+                provider_network_type=details.provider_network_type,
+                is_port_security_enabled=details.port_security_enabled,
+                is_router_external=details.has_external_router,
+            )
+            assert returned == self.network_api.create_network.return_value
+
+    @staticmethod
+    def _run_project_not_found_test(method: Callable, *args, **kwargs):
+        with patch("openstack_network.OpenstackIdentity") as patched_ident:
+            patched_ident.find_project.return_value = None
+            method(*args, **kwargs)
+
     @raises(ItemNotFoundError)
     def test_create_network_rbac_network_not_found(self):
         self.instance.find_network = Mock(return_value=None)
@@ -47,9 +82,9 @@ class OpenstackNetworkTests(unittest.TestCase):
 
     @raises(ItemNotFoundError)
     def test_create_network_rbac_project_not_found(self):
-        with patch("openstack_network.OpenstackIdentity") as patched_ident:
-            patched_ident.find_project.return_value = None
-            self.instance.create_network_rbac(NonCallableMock(), NonCallableMock())
+        self._run_project_not_found_test(
+            self.instance.create_network_rbac, NonCallableMock(), NonCallableMock()
+        )
 
     def test_create_rbac_uses_found_project_and_network(self):
         with patch("openstack_network.OpenstackIdentity") as patched_ident:

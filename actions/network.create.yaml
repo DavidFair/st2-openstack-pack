@@ -1,35 +1,44 @@
 ---
 description: Create Network
 enabled: true
-entry_point: src/network.py
+entry_point: src/network_actions.py
 name: network.create
 parameters:
   submodule:
     default: network_create
     immutable: True
     type: string
-  project:
-    description: Project for New Network (Name or ID)
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  project_identifier:
+    description: Project to create a new Network in (Name or ID)
     required: True
     type: string
-  name:
+  network_name:
     description: New Network Name
     required: True
     type: string
-  description:
+  network_description:
     description: New Network Description
     required: True
     type: string
-  is_port_security_enabled:
-    description: Port security status
-    type: boolean
-    default: False
   provider_network_type:
     description: Type of physical network that maps to this network resource
     type: string
+    required: true
     default: vxlan
-  is_router_external:
+    enum:
+      - vxlan
+  port_security_enabled:
+    description: Port security status
+    type: boolean
+    default: False
+  has_external_router:
     description: Whether or not this is the default external network
     type: boolean
     default: False
+
 runner_type: python-script

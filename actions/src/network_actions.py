@@ -1,12 +1,14 @@
-from typing import Dict, Union, Tuple
+from typing import Dict, Union, Tuple, Optional
 
 from openstack.exceptions import ResourceNotFound
 from openstack.network.v2.network import Network
 from openstack.network.v2.rbac_policy import RBACPolicy
 
+from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
 from openstack_action import OpenstackAction
 from openstack_network import OpenstackNetwork
+from structs.network_details import NetworkDetails
 from structs.network_rbac import NetworkRbac
 
 
@@ -60,31 +62,46 @@ class NetworkActions(OpenstackAction):
             return False, f"RBAC policy not found, {err}"
         return True, rbac_policy
 
-    def network_create(self, project, **network_kwargs):
+    def network_create(
+        self,
+        cloud_account: str,
+        project_identifier: str,
+        network_name: str,
+        network_description: str,
+        provider_network_type: str,
+        port_security_enabled: bool,
+        has_external_router: bool,
+    ) -> Tuple[bool, Optional[Network]]:
         """
-        Create a Network for a Project
-        :param project: Project Name or ID that network will be created on
-        :param network_kwargs: Network properties to pass in - see action definintion yaml file for details)
-        :return: (status (Bool), reason (String))
+        Creates a network for a given project
+        :param cloud_account: The account from the clouds configuration to use
+        :param project_identifier: Name or Openstack ID to use for the project
+        :param network_name: The new network name
+        :param network_description: The new network description
+        :param provider_network_type: The type of underlying physical network to map to
+        :param port_security_enabled: Whether to enable port security on this network
+        :param has_external_router: Is this network the default external network
+        :return: The created network object, if any
         """
-        # get project id
-        project_id = self.find_resource_id(project, self.conn.identity.find_project)
-        if not project_id:
-            return False, "Project not found"
 
-        try:
-            network = self.conn.network.create_network(
-                project_id=project_id, **network_kwargs
-            )
-        except ResourceNotFound as err:
-            return False, f"Network creation failed: {err}"
-        return True, network
+        network_type = NetworkProviders[provider_network_type]
+        details = NetworkDetails(
+            name=network_name,
+            description=network_description,
+            project_identifier=project_identifier,
+            provider_network_type=network_type,
+            port_security_enabled=port_security_enabled,
+            has_external_router=has_external_router,
+        )
+
+        network = self._api.create_network(cloud_account, details)
+        return bool(network), network
 
     def network_rbac_create(
         self,
         cloud_account: str,
-        network_identifier: str,
         project_identifier: str,
+        network_identifier: str,
         rbac_action: str,
     ) -> Tuple[bool, RBACPolicy]:
         """

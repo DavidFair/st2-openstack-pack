@@ -1,14 +1,6 @@
-from enum import Enum, auto
+from enum import auto
 
-
-class _AutoName(Enum):
-    """
-    Generates values matching the original key
-    """
-
-    @staticmethod
-    def _generate_next_value_(name: str, *args, **kwargs):
-        return name
+from enums.auto_name import _AutoName
 
 
 class RbacNetworkActions(_AutoName):

@@ -1,5 +1,6 @@
 from unittest.mock import create_autospec, NonCallableMock
 
+from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
 from openstack_network import OpenstackNetwork
 from src.network_actions import NetworkActions
@@ -30,6 +31,34 @@ class TestNetworkActions(OpenstackActionTestCase):
         returned = self.action.network_find(NonCallableMock(), NonCallableMock())
         assert returned[0] is False
         assert "could not be found" in returned[1]
+
+    def test_create_network_failed(self):
+        self.network_mock.create_network.return_value = None
+        returned = self.action.network_create(
+            cloud_account=NonCallableMock(),
+            project_identifier=NonCallableMock(),
+            network_name=NonCallableMock(),
+            network_description=NonCallableMock(),
+            provider_network_type=NetworkProviders.VXLAN.value,
+            port_security_enabled=NonCallableMock(),
+            has_external_router=NonCallableMock(),
+        )
+
+        assert returned == (False, None)
+
+    def test_create_network_successful(self):
+        returned = self.action.network_create(
+            cloud_account=NonCallableMock(),
+            project_identifier=NonCallableMock(),
+            network_name=NonCallableMock(),
+            network_description=NonCallableMock(),
+            provider_network_type=NetworkProviders.VXLAN.value,
+            port_security_enabled=NonCallableMock(),
+            has_external_router=NonCallableMock(),
+        )
+
+        expected = self.network_mock.create_network.return_value
+        assert returned == (True, expected)
 
     def test_create_rbac_successful(self):
         for action in ["external", "shared"]:

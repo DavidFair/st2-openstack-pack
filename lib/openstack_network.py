@@ -8,6 +8,7 @@ from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
 from openstack_identity import OpenstackIdentity
+from structs.network_details import NetworkDetails
 from structs.network_rbac import NetworkRbac
 
 
@@ -28,6 +29,30 @@ class OpenstackNetwork:
             return conn.network.find_network(network_identifier, ignore_missing=True)
 
     @staticmethod
+    def create_network(
+        cloud_account: str, details: NetworkDetails
+    ) -> Optional[Network]:
+        details.name = details.name.strip()
+        if not details.name:
+            raise MissingMandatoryParamError("A network name is required")
+
+        project_id = OpenstackIdentity.find_project(
+            cloud_account, project_identifier=details.project_identifier
+        )
+        if not project_id:
+            raise ItemNotFoundError("The specified project was not found")
+
+        with OpenstackConnection(cloud_account) as conn:
+            return conn.network.create_network(
+                project_id=project_id,
+                name=details.name,
+                description=details.description,
+                provider_network_type=details.provider_network_type,
+                is_port_security_enabled=details.port_security_enabled,
+                is_router_external=details.has_external_router,
+            )
+
+    @staticmethod
     def _parse_rbac_action(action: RbacNetworkActions) -> str:
         """
         Parses the given RBAC enum into an Openstack compatible string
@@ -43,6 +68,12 @@ class OpenstackNetwork:
     def create_network_rbac(
         self, cloud_account: str, rbac_details: NetworkRbac
     ) -> RBACPolicy:
+        """
+        Creates an RBAC policy for the given network
+        :param cloud_account: The clouds.yaml account to use
+        :param rbac_details: The details associated with the new policy
+        :return: The RBAC Policy if it was created, else None
+        """
         network_id = self.find_network(
             cloud_account, network_identifier=rbac_details.network_identifier
         )
