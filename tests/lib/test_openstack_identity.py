@@ -62,6 +62,9 @@ class OpenstackIdentityTests(unittest.TestCase):
 
     @raises(ConflictException)
     def test_create_project_forwards_conflict_exception(self):
+        """
+        Tests that a conflict exception doesn't get lost from Openstack
+        """
         instance = OpenstackIdentity()
         self.identity_api.create_project.side_effect = ConflictException
         instance.create_project(NonCallableMock(), NonCallableMock())

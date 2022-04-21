@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Optional
 
 from openstack.exceptions import ResourceNotFound, ConflictException
@@ -32,9 +31,9 @@ class OpenstackIdentity:
                     description=project_details.description,
                     is_enabled=project_details.is_enabled,
                 )
-            except ConflictException as e:
+            except ConflictException as err:
                 # Strip out frames that are noise by rethrowing
-                raise ConflictException(e.message)
+                raise ConflictException(err.message) from err
 
     @staticmethod
     def delete_project(cloud_account: str, project_identifier: str) -> bool:

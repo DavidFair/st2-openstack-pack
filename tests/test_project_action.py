@@ -1,4 +1,3 @@
-from enum import Enum
 from unittest.mock import create_autospec, NonCallableMock, Mock
 
 from openstack_identity import OpenstackIdentity
@@ -93,6 +92,9 @@ class TestActionProject(OpenstackActionTestCase):
         assert returned_values == (False, None)
 
     def test_run_dispatch(self):
+        """
+        Tests that dynamic dispatch works for all the expected methods
+        """
         for method_name in ["project_create", "project_delete", "project_find"]:
             assert hasattr(self.action, method_name)
             mocked_method = Mock()

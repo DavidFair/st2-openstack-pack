@@ -20,9 +20,14 @@ class ProjectAction(Action):
             "project_delete": self.project_delete,
         }
 
-    def run(self, **kwargs):
-        func_name: str = kwargs.pop("submodule").casefold()
-        func: Callable = getattr(self, func_name)
+    def run(self, submodule: str, **kwargs):
+        """
+        Dynamically dispatches
+        :param submodule: the method to run
+        :param kwargs: Arguments to the method
+        :return: The output from that method
+        """
+        func: Callable = getattr(self, submodule)
         return func(**kwargs)
 
     def project_delete(
