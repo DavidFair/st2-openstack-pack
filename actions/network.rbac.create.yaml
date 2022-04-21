@@ -1,7 +1,7 @@
 ---
 description: Create Network RBAC rule
 enabled: true
-entry_point: src/network.py
+entry_point: src/network_action.py
 name: network.rbac.create
 parameters:
   submodule:

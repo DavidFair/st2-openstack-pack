@@ -1,12 +1,16 @@
+from typing import Dict
+
 from openstack.exceptions import ResourceNotFound
 
 from openstack_action import OpenstackAction
+from openstack_identity import OpenstackIdentity
 
 
-class Network(OpenstackAction):
-    def __init__(self, *args, **kwargs):
+class NetworkAction(OpenstackAction):
+    def __init__(self, *args, config: Dict = None, **kwargs):
         """constructor class"""
         super().__init__(*args, **kwargs)
+        self._api: OpenstackIdentity = config.get("openstack_api", OpenstackIdentity())
 
         # lists possible functions that could be run as an action
         self.func = {

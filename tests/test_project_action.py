@@ -6,7 +6,7 @@ from structs.create_project import ProjectDetails
 from tests.openstack_action_test_case import OpenstackActionTestCase
 
 
-class TestActionProject(OpenstackActionTestCase):
+class TestProjectAction(OpenstackActionTestCase):
     """
     Unit tests the Project.* actions
     """
