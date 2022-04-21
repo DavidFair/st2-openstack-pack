@@ -99,3 +99,14 @@ class TestNetworkActions(OpenstackActionTestCase):
         returned = self.action.network_delete(NonCallableMock(), NonCallableMock())
         assert returned[0] is False
         assert "could not be found" in returned[1]
+
+    def test_run_method(self):
+        expected_methods = [
+            "network_find",
+            "network_rbac_find",
+            "network_create",
+            "network_rbac_create",
+            "network_delete",
+            "network_rbac_delete",
+        ]
+        self._test_run_dynamic_dispatch(expected_methods)

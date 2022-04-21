@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import List
 from unittest.mock import Mock, NonCallableMock
 
 from st2tests.actions import BaseActionTestCase
@@ -25,3 +26,15 @@ class OpenstackActionTestCase(BaseActionTestCase, ABC):
         api_mock = api_mock if api_mock else NonCallableMock()
         config["openstack_api"] = api_mock
         return super().get_action_instance(config=config)
+
+    def _test_run_dynamic_dispatch(self, expected_methods: List[str]):
+        for method_name in expected_methods:
+            assert hasattr(self.action, method_name)
+            mocked_method = Mock()
+            setattr(self.action, method_name, mocked_method)
+
+            expected_kwargs = {"foo": NonCallableMock(), "bar": NonCallableMock()}
+            return_value = self.action.run(submodule=method_name, **expected_kwargs)
+
+            mocked_method.assert_called_once_with(**expected_kwargs)
+            assert return_value == mocked_method.return_value

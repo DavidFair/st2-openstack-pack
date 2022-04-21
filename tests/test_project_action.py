@@ -96,13 +96,6 @@ class TestProjectAction(OpenstackActionTestCase):
         """
         Tests that dynamic dispatch works for all the expected methods
         """
-        for method_name in ["project_create", "project_delete", "project_find"]:
-            assert hasattr(self.action, method_name)
-            mocked_method = Mock()
-            setattr(self.action, method_name, mocked_method)
-
-            expected_kwargs = {"foo": NonCallableMock(), "bar": NonCallableMock()}
-            return_value = self.action.run(submodule=method_name, **expected_kwargs)
-
-            mocked_method.assert_called_once_with(**expected_kwargs)
-            assert return_value == mocked_method.return_value
+        self._test_run_dynamic_dispatch(
+            ["project_create", "project_delete", "project_find"]
+        )

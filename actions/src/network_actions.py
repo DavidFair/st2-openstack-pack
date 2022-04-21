@@ -1,33 +1,32 @@
-from typing import Dict, Union, Tuple, Optional
+from typing import Dict, Union, Tuple, Optional, Callable
 
-from openstack.exceptions import ResourceNotFound
 from openstack.network.v2.network import Network
 from openstack.network.v2.rbac_policy import RBACPolicy
+from st2common.runners.base_action import Action
 
 from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
-from openstack_action import OpenstackAction
 from openstack_network import OpenstackNetwork
 from structs.network_details import NetworkDetails
 from structs.network_rbac import NetworkRbac
 
 
-class NetworkActions(OpenstackAction):
+class NetworkActions(Action):
     def __init__(self, *args, config: Dict = None, **kwargs):
         """constructor class"""
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, config=config, **kwargs)
         self._api: OpenstackNetwork = config.get("openstack_api", OpenstackNetwork())
 
-        # lists possible functions that could be run as an action
-        self.func = {
-            "network_find": self.network_find,
-            "network_rbac_find": self.network_rbac_find,
-            "network_create": self.network_create,
-            "network_delete": self.network_delete,
-            "network_rbac_delete": self.network_rbac_delete
-            # network_update
-            # network_rbac_update
-        }
+    def run(self, submodule: str, **kwargs):
+        """
+        Dynamically dispatches to the method wanted
+        """
+        func: Callable = getattr(self, submodule)
+        return func(**kwargs)
+
+    # Pending:
+    # network_update
+    # network_rbac_update
 
     def network_find(
         self, cloud_account: str, network_identifier: str

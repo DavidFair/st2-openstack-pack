@@ -10,7 +10,7 @@ from st2common.runners.base_action import Action
 class ProjectAction(Action):
     def __init__(self, *args, config: Dict = None, **kwargs):
         # DI handled in OpenstackActionTestCase
-        super().__init__(*args, config, **kwargs)
+        super().__init__(*args, config=config, **kwargs)
         self._api: OpenstackIdentity = config.get("openstack_api", OpenstackIdentity())
 
         # lists possible functions that could be run as an action
