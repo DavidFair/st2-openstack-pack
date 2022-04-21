@@ -97,3 +97,30 @@ class OpenstackIdentityTests(unittest.TestCase):
         self.identity_api.delete_project.side_effect = ResourceNotFound
         result = instance.delete_project("", project_identifier="test")
         assert result is False
+
+    @staticmethod
+    @raises(MissingMandatoryParamError)
+    def test_find_project_raises_missing_project_identifier():
+        """
+        Tests that a missing mandatory parameter is missing if a whitespace
+        or empty string is passed
+        """
+        instance = OpenstackIdentity()
+        instance.find_project("set", " ")
+
+    def test_find_project_forwards_result(self):
+        """
+        Tests that the call forwards the result as is, and the Openstack API
+        is being used correctly
+        """
+        instance = OpenstackIdentity()
+        cloud_account, project_identifier = NonCallableMock(), NonCallableMock()
+        found = instance.find_project(
+            cloud_account=cloud_account, project_identifier=project_identifier
+        )
+
+        self.mocked_connection.assert_called_once_with(cloud_account)
+        self.identity_api.find_project.assert_called_once_with(
+            project_identifier.strip(), ignore_missing=True
+        )
+        assert found == self.identity_api.find_project.return_value

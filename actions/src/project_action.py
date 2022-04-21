@@ -1,6 +1,5 @@
 from typing import Tuple, Optional
 
-from openstack.exceptions import ResourceNotFound
 from openstack.identity.v3.project import Project
 
 from openstack_action import OpenstackAction
@@ -20,7 +19,7 @@ class ProjectAction(OpenstackAction):
 
         # lists possible functions that could be run as an action
         self.func = {
-            "project_show": self.project_show,
+            "project_find": self.project_find,
             "project_create": self.project_create,
             "project_delete": self.project_delete,
         }
@@ -42,25 +41,19 @@ class ProjectAction(OpenstackAction):
         err = "" if delete_ok else "The specified result was not found"
         return delete_ok, err
 
-    def project_show(self, cloud_account: str, domain: str, project: str):
+    def project_find(
+        self, cloud_account: str, project_identifier: str
+    ) -> Tuple[bool, Optional[Project]]:
         """
         find and return a given project's properties
         :param cloud_account: The account from the clouds configuration to use
-        :param project:(String) Name or ID,
-        :param domain:(String) DomainAction Name or ID
+        :param project_identifier: Name or Openstack ID
         :return: (status (Bool), reason (String))
         """
-        raise NotImplementedError("Not implemented yet")
-        # pylint: disable=unreachable
-        domain_id = self.find_domain(cloud_account, domain)
-        if not domain_id:
-            return False, f"No domain found with Name or ID {domain}"
-        # TODO:
-        try:
-            project = self.conn.identity.find_project(project, domain_id=domain_id)
-        except ResourceNotFound as err:
-            return False, f"Finding Project Failed {err}"
-        return True, project
+        project = self._api.find_project(
+            cloud_account=cloud_account, project_identifier=project_identifier
+        )
+        return bool(project), project
 
     def project_create(
         self,

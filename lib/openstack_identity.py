@@ -4,8 +4,6 @@ from openstack.exceptions import ResourceNotFound
 from openstack.identity.v3.project import Project
 from missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
-
-# pylint: disable=too-few-public-methods
 from structs.create_project import ProjectDetails
 
 
@@ -36,6 +34,7 @@ class OpenstackIdentity:
     @staticmethod
     def delete_project(cloud_account: str, project_identifier: str) -> bool:
         """
+        Deletes a project from Openstack default domain
         :param cloud_account: The clouds entry to use
         :param project_identifier: The name or Openstack ID for the project
         :return: True if the project was deleted, False if the operation failed
@@ -55,3 +54,20 @@ class OpenstackIdentity:
                 return result is None  # Where None == success
             except ResourceNotFound:
                 return False
+
+    @staticmethod
+    def find_project(cloud_account: str, project_identifier: str) -> Optional[Project]:
+        """
+        Finds a project with the given name or ID
+        :param cloud_account: The clouds entry to use
+        :param project_identifier: The name or Openstack ID for the project
+        :return: The found project, or None
+        """
+        project_identifier = project_identifier.strip()
+        if not project_identifier:
+            raise MissingMandatoryParamError(
+                "A project name or project ID must be provided"
+            )
+
+        with OpenstackConnection(cloud_account) as conn:
+            return conn.identity.find_project(project_identifier, ignore_missing=True)

@@ -1,0 +1,21 @@
+---
+description: Find a Project
+enabled: true
+entry_point: src/project_action.py
+name: project.find
+parameters:
+  submodule:
+    default: project_find
+    immutable: true
+    type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  project_identifier:
+    description: Project to find (name or Openstack ID)
+    required: true
+    type: string
+    default: ''
+runner_type: python-script

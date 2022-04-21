@@ -73,3 +73,20 @@ class TestActionProject(OpenstackActionTestCase):
             NonCallableMock(), NonCallableMock()
         )
         assert returned_values == (True, "")
+
+    def test_project_find_success(self):
+        """
+        Tests that the correct results are given for a found project
+        """
+        expected = NonCallableMock()
+        self.identity_mock.find_project.return_value = expected
+        returned_values = self.action.project_find(NonCallableMock(), NonCallableMock())
+        assert returned_values == (True, expected)
+
+    def test_project_find_failure(self):
+        """
+        Tests that the correct return is given when a project is not found
+        """
+        self.identity_mock.find_project.return_value = None
+        returned_values = self.action.project_find(NonCallableMock(), NonCallableMock())
+        assert returned_values == (False, None)
