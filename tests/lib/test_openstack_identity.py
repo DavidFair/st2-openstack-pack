@@ -5,8 +5,8 @@ from nose.tools import raises
 from openstack.exceptions import ConflictException
 
 from openstack_identity import OpenstackIdentity
-from missing_mandatory_param_error import MissingMandatoryParamError
-from structs.create_project import ProjectDetails
+from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
+from structs.project_details import ProjectDetails
 
 
 class OpenstackIdentityTests(unittest.TestCase):

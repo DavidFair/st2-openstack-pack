@@ -2,12 +2,15 @@ from typing import Dict, Union, Tuple
 
 from openstack.exceptions import ResourceNotFound
 from openstack.network.v2.network import Network
+from openstack.network.v2.rbac_policy import RBACPolicy
 
+from enums.rbac_network_actions import RbacNetworkActions
 from openstack_action import OpenstackAction
 from openstack_network import OpenstackNetwork
+from structs.network_rbac import NetworkRbac
 
 
-class NetworkAction(OpenstackAction):
+class NetworkActions(OpenstackAction):
     def __init__(self, *args, config: Dict = None, **kwargs):
         """constructor class"""
         super().__init__(*args, **kwargs)
@@ -81,34 +84,27 @@ class NetworkAction(OpenstackAction):
         self,
         cloud_account: str,
         network_identifier: str,
-        target_project: str,
-        **network_kwargs,
-    ):
+        project_identifier: str,
+        rbac_action: str,
+    ) -> Tuple[bool, RBACPolicy]:
         """
         Create RBAC rules
         :param cloud_account: The account from the clouds configuration to use
-        :param network_identifier: ID or Name
-        :param target_project: ID or Name
-        :param network_kwargs: - Network properties to pass in - see action definintion yaml file for details)
-        :return: (status (Bool), reason (String))
+        :param network_identifier: Name or Openstack ID for the network
+        :param project_identifier: Name or Openstack ID for the project
+        :param rbac_action: - Network properties to pass in - see action definintion yaml file for details)
+        :return: status, Policy Object
         """
-
-        # get network_identifier ID
-        object_id = self.find_resource_id(
-            network_identifier, self.conn.network.find_network
+        action_enum = RbacNetworkActions[rbac_action.upper()]
+        rbac_details = NetworkRbac(
+            name="",
+            action=action_enum,
+            project_identifier=project_identifier,
+            network_identifier=network_identifier,
         )
 
-        # get project ID
-        target_project_id = self.find_resource_id(
-            target_project, self.conn.identity.find_project
-        )
-
-        rbac = self.conn.network.create_rbac_policy(
-            object_id=object_id,
-            target_project_id=target_project_id,
-            **network_kwargs,
-        )
-        return True, rbac
+        rbac = self._api.create_network_rbac(cloud_account, rbac_details)
+        return bool(rbac), rbac
 
     def network_delete(self, network, project):
         """

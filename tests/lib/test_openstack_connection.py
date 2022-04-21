@@ -2,7 +2,7 @@ from unittest import mock
 
 from nose.tools import raises
 
-from missing_mandatory_param_error import MissingMandatoryParamError
+from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
 
 

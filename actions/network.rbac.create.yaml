@@ -8,17 +8,13 @@ parameters:
     default: network_rbac_create
     immutable: true
     type: string
-  object_type:
-    description: 'Type of the object that RBAC policy affects ("qos_policy" or
-            "network") (choices: qos_policy, network)'
+  rbac_action:
+    description: Action for the RBAC policy ("access_as_external" or "access_as_shared")
     required: true
     type: string
     enum:
-      - network
-      - qos_policy
-  action:
-    description: Action for the RBAC policy ("access_as_external" or "access_as_shared")
-    type: string
+      - shared
+      - external
   rbac_object:
     description: The object to which this RBAC policy affects (name or ID)
     required: true

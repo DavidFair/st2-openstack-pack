@@ -1,9 +1,14 @@
 from typing import Optional
 
 from openstack.network.v2.network import Network
+from openstack.network.v2.rbac_policy import RBACPolicy
 
-from missing_mandatory_param_error import MissingMandatoryParamError
+from enums.rbac_network_actions import RbacNetworkActions
+from exceptions.item_not_found_error import ItemNotFoundError
+from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
+from openstack_identity import OpenstackIdentity
+from structs.network_rbac import NetworkRbac
 
 
 class OpenstackNetwork:
@@ -21,3 +26,38 @@ class OpenstackNetwork:
 
         with OpenstackConnection(cloud_account) as conn:
             return conn.network.find_network(network_identifier, ignore_missing=True)
+
+    @staticmethod
+    def _parse_rbac_action(action: RbacNetworkActions) -> str:
+        """
+        Parses the given RBAC enum into an Openstack compatible string
+        """
+        # This can be replaced with match case when we're Python 3.10+
+        if action is RbacNetworkActions.SHARED:
+            return "access_as_shared"
+        elif action is RbacNetworkActions.EXTERNAL:
+            return "access_as_external"
+        else:
+            raise KeyError("Unknown RBAC action")
+
+    def create_network_rbac(
+        self, cloud_account: str, rbac_details: NetworkRbac
+    ) -> RBACPolicy:
+        network_id = self.find_network(
+            cloud_account, network_identifier=rbac_details.network_identifier
+        )
+        if not network_id:
+            raise ItemNotFoundError("The specified network was not found")
+
+        project_id = OpenstackIdentity.find_project(
+            cloud_account, project_identifier=rbac_details.project_identifier
+        )
+        if not project_id:
+            raise ItemNotFoundError("The specified project was not found")
+
+        with OpenstackConnection(cloud_account) as conn:
+            return conn.network.create_rbac_policy(
+                object_id=network_id,
+                target_project_id=project_id,
+                action=self._parse_rbac_action(rbac_details.action),
+            )

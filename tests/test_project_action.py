@@ -2,7 +2,7 @@ from unittest.mock import create_autospec, NonCallableMock, Mock
 
 from openstack_identity import OpenstackIdentity
 from src.project_action import ProjectAction
-from structs.create_project import ProjectDetails
+from structs.project_details import ProjectDetails
 from tests.openstack_action_test_case import OpenstackActionTestCase
 
 

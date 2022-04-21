@@ -2,9 +2,9 @@ from typing import Optional
 
 from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
-from missing_mandatory_param_error import MissingMandatoryParamError
+from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
-from structs.create_project import ProjectDetails
+from structs.project_details import ProjectDetails
 
 
 class OpenstackIdentity:
