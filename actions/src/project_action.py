@@ -1,21 +1,17 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Callable
 
 from openstack.identity.v3.project import Project
 
-from openstack_action import OpenstackAction
 from openstack_identity import OpenstackIdentity
 from structs.create_project import ProjectDetails
+from st2common.runners.base_action import Action
 
 
-class ProjectAction(OpenstackAction):
-    def __init__(self, *args, **kwargs):
-        """constructor class"""
-        super().__init__(*args, **kwargs)
-
+class ProjectAction(Action):
+    def __init__(self, *args, config: Dict = None, **kwargs):
         # DI handled in OpenstackActionTestCase
-        self._api: OpenstackIdentity = kwargs["config"].get(
-            "openstack_api", OpenstackIdentity()
-        )
+        super().__init__(*args, config, **kwargs)
+        self._api: OpenstackIdentity = config.get("openstack_api", OpenstackIdentity())
 
         # lists possible functions that could be run as an action
         self.func = {
@@ -23,6 +19,11 @@ class ProjectAction(OpenstackAction):
             "project_create": self.project_create,
             "project_delete": self.project_delete,
         }
+
+    def run(self, **kwargs):
+        func_name: str = kwargs.pop("submodule").casefold()
+        func: Callable = getattr(self, func_name)
+        return func(**kwargs)
 
     def project_delete(
         self, cloud_account: str, project_identifier: str

@@ -1,4 +1,4 @@
-from unittest.mock import create_autospec, NonCallableMock
+from unittest.mock import create_autospec, NonCallableMock, Mock
 
 from openstack_identity import OpenstackIdentity
 from src.project_action import ProjectAction
@@ -90,3 +90,15 @@ class TestActionProject(OpenstackActionTestCase):
         self.identity_mock.find_project.return_value = None
         returned_values = self.action.project_find(NonCallableMock(), NonCallableMock())
         assert returned_values == (False, None)
+
+    def test_run_dispatch(self):
+        for method_name in ["project_create", "project_delete", "project_find"]:
+            assert hasattr(self.action, method_name)
+            mocked_method = Mock()
+            setattr(self.action, method_name, mocked_method)
+
+            expected_kwargs = {"foo": NonCallableMock(), "bar": NonCallableMock()}
+            return_value = self.action.run(submodule=method_name, **expected_kwargs)
+
+            mocked_method.assert_called_once_with(**expected_kwargs)
+            assert return_value == mocked_method.return_value
