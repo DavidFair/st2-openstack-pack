@@ -39,7 +39,7 @@ class ProjectAction(Action):
             cloud_account=cloud_account, project_identifier=project_identifier
         )
         # Currently, we only handle one error, other throws will propagate upwards
-        err = "" if delete_ok else "The specified result was not found"
+        err = "" if delete_ok else "The specified project was not found"
         return delete_ok, err
 
     def project_find(
