@@ -1,6 +1,6 @@
 from typing import Optional
 
-from openstack.exceptions import ResourceNotFound, ConflictException
+from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
 from missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
@@ -35,29 +35,22 @@ class OpenstackIdentity:
                 # Strip out frames that are noise by rethrowing
                 raise ConflictException(err.message) from err
 
-    @staticmethod
-    def delete_project(cloud_account: str, project_identifier: str) -> bool:
+    def delete_project(self, cloud_account: str, project_identifier: str) -> bool:
         """
         Deletes a project from Openstack default domain
         :param cloud_account: The clouds entry to use
         :param project_identifier: The name or Openstack ID for the project
         :return: True if the project was deleted, False if the operation failed
         """
-        project_identifier = project_identifier.strip()
-        if not project_identifier:
-            raise MissingMandatoryParamError(
-                "A project name or project ID must be provided"
-            )
+        project = self.find_project(
+            cloud_account=cloud_account, project_identifier=project_identifier
+        )
+        if not project:
+            return False
 
-        ignore_missing = False
         with OpenstackConnection(cloud_account) as conn:
-            try:
-                result = conn.identity.delete_project(
-                    project=project_identifier, ignore_missing=ignore_missing
-                )
-                return result is None  # Where None == success
-            except ResourceNotFound:
-                return False
+            result = conn.identity.delete_project(project=project, ignore_missing=False)
+            return result is None  # Where None == success
 
     @staticmethod
     def find_project(cloud_account: str, project_identifier: str) -> Optional[Project]:

@@ -1,8 +1,8 @@
 import unittest
-from unittest.mock import NonCallableMock, patch
+from unittest.mock import NonCallableMock, patch, ANY, Mock
 
 from nose.tools import raises
-from openstack.exceptions import ResourceNotFound, ConflictException
+from openstack.exceptions import ConflictException
 
 from openstack_identity import OpenstackIdentity
 from missing_mandatory_param_error import MissingMandatoryParamError
@@ -78,12 +78,32 @@ class OpenstackIdentityTests(unittest.TestCase):
         # Intentional spaces
         OpenstackIdentity().delete_project("", project_identifier=" \t")
 
+    def test_delete_project_calls_find_project(self):
+        """
+        Since delete project expects either the OS UUID or a project instance
+        we need to forward the call onto find before we call delete
+        """
+        instance = OpenstackIdentity()
+        identifier = NonCallableMock()
+
+        instance.delete_project(NonCallableMock(), project_identifier=identifier)
+
+        # We want this to throw to follow Pythonic E.A.F.P.
+        self.identity_api.find_project.assert_called_once_with(
+            identifier.strip(), ignore_missing=ANY
+        )
+        found_identifier = self.identity_api.find_project.return_value
+        self.identity_api.delete_project.assert_called_once_with(
+            project=found_identifier, ignore_missing=False
+        )
+
     def test_delete_project_successful_with_name_or_id(self):
         """
         Tests delete project will use name or Openstack ID if provided
         and will return the result
         """
         instance = OpenstackIdentity()
+        instance.find_project = Mock()
         self.identity_api.delete_project.return_value = None
 
         identifier = NonCallableMock()
@@ -93,17 +113,18 @@ class OpenstackIdentityTests(unittest.TestCase):
 
         assert result is True
         self.identity_api.delete_project.assert_called_once_with(
-            project=identifier.strip(), ignore_missing=False
+            project=instance.find_project.return_value, ignore_missing=False
         )
 
-    def test_delete_project_handles_resource_not_found(self):
+    @staticmethod
+    def test_delete_project_handles_resource_not_found():
         """
         Tests that the delete method can handle resource not found. This is
         enabled, so it's easier to tell between a None (success) type and a
         failure
         """
         instance = OpenstackIdentity()
-        self.identity_api.delete_project.side_effect = ResourceNotFound
+        instance.find_project = Mock(return_value=None)
         result = instance.delete_project("", project_identifier="test")
         assert result is False
 
