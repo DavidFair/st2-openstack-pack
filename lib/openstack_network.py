@@ -49,6 +49,12 @@ class OpenstackNetwork:
     def create_network(
         cloud_account: str, details: NetworkDetails
     ) -> Optional[Network]:
+        """
+        Creates a network for a given project
+        :param cloud_account: The clouds entry to use
+        :param details: A struct containing all details related to this new network
+        :return: A Network object, or None
+        """
         details.name = details.name.strip()
         if not details.name:
             raise MissingMandatoryParamError("A network name is required")
@@ -77,10 +83,9 @@ class OpenstackNetwork:
         # This can be replaced with match case when we're Python 3.10+
         if action is RbacNetworkActions.SHARED:
             return "access_as_shared"
-        elif action is RbacNetworkActions.EXTERNAL:
+        if action is RbacNetworkActions.EXTERNAL:
             return "access_as_external"
-        else:
-            raise KeyError("Unknown RBAC action")
+        raise KeyError("Unknown RBAC action")
 
     def create_network_rbac(
         self, cloud_account: str, rbac_details: NetworkRbac

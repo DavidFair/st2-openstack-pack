@@ -7,5 +7,5 @@ class _AutoName(Enum):
     """
 
     @staticmethod
-    def _generate_next_value_(name: str, *args, **kwargs):
+    def _generate_next_value_(name: str, *_, **__):
         return name

@@ -14,7 +14,11 @@ class TestNetworkActions(OpenstackActionTestCase):
 
     action_cls = NetworkActions
 
+    # pylint: disable=invalid-name
     def setUp(self):
+        """
+        Prepares the mock API and injects it into a new instance
+        """
         super().setUp()
         self.network_mock = create_autospec(OpenstackNetwork)
         self.action: NetworkActions = self.get_action_instance(
@@ -22,28 +26,43 @@ class TestNetworkActions(OpenstackActionTestCase):
         )
 
     def test_find_network_found(self):
+        """
+        Tests the action returns the found Network object
+        """
         returned = self.action.network_find(NonCallableMock(), NonCallableMock())
         expected = self.network_mock.find_network.return_value
         assert returned == (True, expected)
 
     def test_find_network_not_found(self):
+        """
+        Tests the status and message when a network isn't found
+        """
         self.network_mock.find_network.return_value = None
         returned = self.action.network_find(NonCallableMock(), NonCallableMock())
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
     def test_find_rbac_found(self):
+        """
+        Tests the action returns the found RBACPolicy object
+        """
         returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
         expected = self.network_mock.find_network_rbac.return_value
         assert returned == (True, expected)
 
     def test_find_rbac_not_found(self):
+        """
+        Tests the status and message when a policy isn't found
+        """
         self.network_mock.find_network_rbac.return_value = None
         returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
     def test_create_network_failed(self):
+        """
+        Tests the status and message when a network failed to create
+        """
         self.network_mock.create_network.return_value = None
         returned = self.action.network_create(
             cloud_account=NonCallableMock(),
@@ -58,6 +77,9 @@ class TestNetworkActions(OpenstackActionTestCase):
         assert returned == (False, None)
 
     def test_create_network_successful(self):
+        """
+        Tests the action returns the new Network object
+        """
         returned = self.action.network_create(
             cloud_account=NonCallableMock(),
             project_identifier=NonCallableMock(),
@@ -72,6 +94,9 @@ class TestNetworkActions(OpenstackActionTestCase):
         assert returned == (True, expected)
 
     def test_create_rbac_successful(self):
+        """
+        Tests the action returns the new RBAC policy
+        """
         for action in ["external", "shared"]:
             returned = self.action.network_rbac_create(
                 NonCallableMock(), NonCallableMock(), NonCallableMock(), action
@@ -80,6 +105,9 @@ class TestNetworkActions(OpenstackActionTestCase):
             assert returned == (True, expected)
 
     def test_create_rbac_failed(self):
+        """
+        Tests the status and message when a RBAC can't be created
+        """
         self.network_mock.create_network_rbac.return_value = None
         returned = self.action.network_rbac_create(
             NonCallableMock(),
@@ -90,17 +118,26 @@ class TestNetworkActions(OpenstackActionTestCase):
         assert returned == (False, None)
 
     def test_delete_network_success(self):
+        """
+        Tests the action returns success when a network is deleted
+        """
         self.network_mock.delete_network.return_value = True
         returned = self.action.network_delete(NonCallableMock(), NonCallableMock())
         assert returned == (True, "")
 
     def test_delete_network_failed(self):
+        """
+        Tests the status and message when a network isn't deleted
+        """
         self.network_mock.delete_network.return_value = False
         returned = self.action.network_delete(NonCallableMock(), NonCallableMock())
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
     def test_run_method(self):
+        """
+        Tests that run can dispatch to the Stackstorm facing methods
+        """
         expected_methods = [
             "network_find",
             "network_rbac_find",

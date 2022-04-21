@@ -1,4 +1,4 @@
-from unittest.mock import create_autospec, NonCallableMock, Mock
+from unittest.mock import create_autospec, NonCallableMock
 
 from openstack_identity import OpenstackIdentity
 from src.project_action import ProjectAction
