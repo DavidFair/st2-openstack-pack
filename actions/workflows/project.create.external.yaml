@@ -65,7 +65,7 @@ tasks:
     action: stackstorm_openstack.network.rbac.create
       object_type="network"
       action="access_as_shared"
-      rbac_object=<% ctx().network_name %>
+      network_identifier=<% ctx().network_name %>
       target_project=<% ctx().project_name %>
     next:
       - when: <% failed() %>

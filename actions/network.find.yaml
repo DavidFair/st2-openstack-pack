@@ -1,0 +1,20 @@
+---
+description: Find a Network
+enabled: true
+entry_point: src/network_actions.py
+name: network.find
+parameters:
+  submodule:
+    default: network_find
+    immutable: true
+    type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  network_identifier:
+    description: Network Name or ID
+    required: True
+    type: string
+runner_type: python-script
