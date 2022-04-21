@@ -1,15 +1,20 @@
 ---
 description: Delete Network RBAC rule
 enabled: true
-entry_point: src/network.py
+entry_point: src/network_actions.py
 name: network.rbac.delete
 parameters:
   submodule:
     default: network_rbac_delete
     immutable: true
     type: string
-  rbac_policy:
-    description: RBAC policy Name or ID
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  rbac_identifier:
+    description: RBAC policy Name or Openstack ID
     required: True
     type: string
 runner_type: python-script

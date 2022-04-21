@@ -21,8 +21,7 @@ class NetworkActions(OpenstackAction):
         # lists possible functions that could be run as an action
         self.func = {
             "network_find": self.network_find,
-            "network_rbac_show": self.network_rbac_show,
-            "network_rbac_create": self.network_rbac_create,
+            "network_rbac_find": self.network_rbac_find,
             "network_create": self.network_create,
             "network_delete": self.network_delete,
             "network_rbac_delete": self.network_rbac_delete
@@ -30,11 +29,6 @@ class NetworkActions(OpenstackAction):
             # network_rbac_update
         }
 
-    # TODO:
-    # network show
-    # network rbac show
-    # network delete
-    # network rbac delete
     def network_find(
         self, cloud_account: str, network_identifier: str
     ) -> Tuple[bool, Union[Network, str]]:
@@ -48,19 +42,18 @@ class NetworkActions(OpenstackAction):
         output = network if network else "The requested network could not be found"
         return bool(network), output
 
-    def network_rbac_show(self, rbac_policy):
+    def network_rbac_find(
+        self, cloud_account: str, rbac_identifier: str
+    ) -> Tuple[bool, Union[RBACPolicy, str]]:
         """
-        Show Network RBAC policy
-        :param rbac_policy: RBAC Name or ID
-        :return:(status (Bool), reason/output (String/Dict)
+        Finds a given Network RBAC policy
+        :param cloud_account: The account from the clouds configuration to use
+        :param rbac_identifier: RBAC Name or ID
+        :return: status, RBAC Policy object or error message
         """
-        try:
-            rbac_policy = self.conn.network.find_rbac_policy(
-                rbac_policy, ignore_missing=False
-            )
-        except ResourceNotFound as err:
-            return False, f"RBAC policy not found, {err}"
-        return True, rbac_policy
+        policy = self._api.find_network_rbac(cloud_account, rbac_identifier)
+        output = policy if policy else "The requested policy could not be found"
+        return bool(policy), output
 
     def network_create(
         self,
@@ -125,7 +118,7 @@ class NetworkActions(OpenstackAction):
 
     def network_delete(
         self, cloud_account: str, network_identifier: str
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> Tuple[bool, str]:
         """
         Deletes the specified network
         :param cloud_account: The account from the clouds.yaml configuration to use
@@ -136,10 +129,15 @@ class NetworkActions(OpenstackAction):
         err = "" if result else "The selected network could not be found"
         return result, err
 
-    def network_rbac_delete(self, rbac_policy):
+    def network_rbac_delete(
+        self, cloud_account: str, rbac_identifier: str
+    ) -> Tuple[bool, str]:
         """
-        Delete a Network RBAC rule
-        :param rbac_policy: Name or ID
-        :return: (status (Bool), reason (String))
+        Removes a given Network RBAC policy
+        :param cloud_account: The account from the clouds configuration to use
+        :param rbac_identifier: RBAC Name or Openstack ID
+        :return: status, RBAC Policy object or error message
         """
-        raise NotImplementedError
+        result = self._api.delete_network_rbac(cloud_account, rbac_identifier)
+        err = "" if result else "The selected RBAC policy could not be found"
+        return result, err

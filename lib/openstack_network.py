@@ -29,6 +29,23 @@ class OpenstackNetwork:
             return conn.network.find_network(network_identifier, ignore_missing=True)
 
     @staticmethod
+    def find_network_rbac(
+        cloud_account: str, rbac_identifier: str
+    ) -> Optional[RBACPolicy]:
+        """
+        Finds a given RBAC network policy
+        :param cloud_account: The associated clouds.yaml account
+        :param rbac_identifier: The name or Openstack ID of the policy
+        :return: The RBACPolicy object or None
+        """
+        rbac_identifier = rbac_identifier.strip()
+        if not rbac_identifier:
+            raise MissingMandatoryParamError("A RBAC name or ID is required")
+
+        with OpenstackConnection(cloud_account) as conn:
+            return conn.network.find_rbac_policy(rbac_identifier, ignore_missing=True)
+
+    @staticmethod
     def create_network(
         cloud_account: str, details: NetworkDetails
     ) -> Optional[Network]:
@@ -105,5 +122,20 @@ class OpenstackNetwork:
             return False
 
         with OpenstackConnection(cloud_account) as conn:
-            result = conn.network.delete_network(network_id, ignore_missing=True)
+            result = conn.network.delete_network(network_id, ignore_missing=False)
+            return result is None
+
+    def delete_network_rbac(self, cloud_account: str, rbac_identifier: str) -> bool:
+        """
+        Deletes the specified network
+        :param cloud_account: The associated credentials to use
+        :param rbac_identifier: The name or Openstack ID to use
+        :return: True if deleted, else False
+        """
+        rbac_id = self.find_network_rbac(cloud_account, rbac_identifier)
+        if not rbac_id:
+            return False
+
+        with OpenstackConnection(cloud_account) as conn:
+            result = conn.network.delete_rbac_policy(rbac_id, ignore_missing=False)
             return result is None

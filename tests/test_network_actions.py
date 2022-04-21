@@ -32,6 +32,17 @@ class TestNetworkActions(OpenstackActionTestCase):
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
+    def test_find_rbac_found(self):
+        returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
+        expected = self.network_mock.find_network_rbac.return_value
+        assert returned == (True, expected)
+
+    def test_find_rbac_not_found(self):
+        self.network_mock.find_network_rbac.return_value = None
+        returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
+        assert returned[0] is False
+        assert "could not be found" in returned[1]
+
     def test_create_network_failed(self):
         self.network_mock.create_network.return_value = None
         returned = self.action.network_create(

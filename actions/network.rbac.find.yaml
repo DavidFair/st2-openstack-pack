@@ -1,11 +1,11 @@
 ---
-description: Delete Network
+description: Finds a Network RBAC rule
 enabled: true
 entry_point: src/network_actions.py
-name: network.delete
+name: network.rbac.find
 parameters:
   submodule:
-    default: network_delete
+    default: network_rbac_find
     immutable: true
     type: string
   cloud_account:
@@ -13,8 +13,8 @@ parameters:
     default: ''
     required: true
     type: string
-  network_identifier:
-    default: Network Name or ID to delete
-    type: string
+  rbac_identifier:
+    description: RBAC policy Name or ID
     required: True
+    type: string
 runner_type: python-script

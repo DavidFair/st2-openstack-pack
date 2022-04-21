@@ -42,6 +42,20 @@ class OpenstackNetworkTests(unittest.TestCase):
         assert returned == self.network_api.find_network.return_value
 
     @raises(MissingMandatoryParamError)
+    def test_find_network_missing_identifier_raises(self):
+        self.instance.find_network_rbac(NonCallableMock(), " \t")
+
+    def test_find_network_forwards_results(self):
+        cloud, identifier = NonCallableMock(), NonCallableMock()
+        result = self.instance.find_network_rbac(cloud, identifier)
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.network_api.find_rbac_policy.assert_called_once_with(
+            identifier.strip(), ignore_missing=True
+        )
+        assert result == self.network_api.find_rbac_policy.return_value
+
+    @raises(MissingMandatoryParamError)
     def test_create_network_no_name(self):
         mocked_details = NonCallableMock()
         mocked_details.name = " \t"
@@ -127,7 +141,7 @@ class OpenstackNetworkTests(unittest.TestCase):
 
         self.instance.find_network.assert_called_once_with(cloud, network_identifier)
         self.network_api.delete_network.assert_called_once_with(
-            self.instance.find_network.return_value, ignore_missing=True
+            self.instance.find_network.return_value, ignore_missing=False
         )
         assert result is True
 
@@ -139,3 +153,28 @@ class OpenstackNetworkTests(unittest.TestCase):
         assert result is False
         self.instance.find_network.assert_called_once_with(cloud, network_identifier)
         self.network_api.delete_network.assert_not_called()
+
+    def test_delete_network_rbac_forwards_find_rbac(self):
+        self.instance.find_network_rbac = Mock()
+        cloud, network_identifier = NonCallableMock(), NonCallableMock()
+        self.network_api.delete_rbac_policy.return_value = None
+        result = self.instance.delete_network_rbac(cloud, network_identifier)
+
+        self.instance.find_network_rbac.assert_called_once_with(
+            cloud, network_identifier
+        )
+        self.network_api.delete_rbac_policy.assert_called_once_with(
+            self.instance.find_network_rbac.return_value, ignore_missing=False
+        )
+        assert result is True
+
+    def test_delete_network_rbac_cant_find_rbac(self):
+        self.instance.find_network_rbac = Mock(return_value=None)
+        cloud, network_identifier = NonCallableMock(), NonCallableMock()
+        result = self.instance.delete_network_rbac(cloud, network_identifier)
+
+        assert result is False
+        self.instance.find_network_rbac.assert_called_once_with(
+            cloud, network_identifier
+        )
+        self.network_api.delete_rbac_policy.assert_not_called()

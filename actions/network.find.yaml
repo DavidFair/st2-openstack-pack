@@ -1,5 +1,5 @@
 ---
-description: Find a Network
+description: Finds a Network
 enabled: true
 entry_point: src/network_actions.py
 name: network.find
