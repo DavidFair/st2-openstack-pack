@@ -53,7 +53,7 @@ class TestActionProject(OpenstackActionTestCase):
 
     def test_project_create_when_failed(self):
         """
-        Tests that create domain returns None and an error
+        Tests that create project returns None and an error
         when the domain is not found
         """
         self.identity_mock.create_project.return_value = None
@@ -89,7 +89,8 @@ class TestActionProject(OpenstackActionTestCase):
         """
         self.identity_mock.find_project.return_value = None
         returned_values = self.action.project_find(NonCallableMock(), NonCallableMock())
-        assert returned_values == (False, None)
+        assert returned_values[0] is False
+        assert "could not be found" in returned_values[1]
 
     def test_run_dispatch(self):
         """

@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Dict, Callable
+from typing import Tuple, Optional, Dict, Callable, Union
 
 from openstack.identity.v3.project import Project
 
@@ -49,17 +49,18 @@ class ProjectAction(Action):
 
     def project_find(
         self, cloud_account: str, project_identifier: str
-    ) -> Tuple[bool, Optional[Project]]:
+    ) -> Tuple[bool, Union[Project, str]]:
         """
         find and return a given project's properties
         :param cloud_account: The account from the clouds configuration to use
         :param project_identifier: Name or Openstack ID
-        :return: (status (Bool), reason (String))
+        :return: status , Project object or error string
         """
         project = self._api.find_project(
             cloud_account=cloud_account, project_identifier=project_identifier
         )
-        return bool(project), project
+        output = project if project else "The project could not be found."
+        return bool(project), output
 
     def project_create(
         self,
