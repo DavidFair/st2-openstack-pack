@@ -1,6 +1,7 @@
+from enum import Enum
 from typing import Optional
 
-from openstack.exceptions import ResourceNotFound
+from openstack.exceptions import ResourceNotFound, ConflictException
 from openstack.identity.v3.project import Project
 from missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_connection import OpenstackConnection
@@ -23,13 +24,17 @@ class OpenstackIdentity:
             raise MissingMandatoryParamError("The project name is missing")
 
         with OpenstackConnection(cloud_account) as conn:
-            return conn.identity.create_project(
-                name=project_details.name,
-                # This is intentionally hard-coded as it's very rare we create something in another domain
-                domain_id="default",
-                description=project_details.description,
-                is_enabled=project_details.is_enabled,
-            )
+            try:
+                return conn.identity.create_project(
+                    name=project_details.name,
+                    # This is intentionally hard-coded as it's very rare we create something in another domain
+                    domain_id="default",
+                    description=project_details.description,
+                    is_enabled=project_details.is_enabled,
+                )
+            except ConflictException as e:
+                # Strip out frames that are noise by rethrowing
+                raise ConflictException(e.message)
 
     @staticmethod
     def delete_project(cloud_account: str, project_identifier: str) -> bool:

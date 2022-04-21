@@ -1,3 +1,4 @@
+from enum import Enum
 from unittest.mock import create_autospec, NonCallableMock, Mock
 
 from openstack_identity import OpenstackIdentity

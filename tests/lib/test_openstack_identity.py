@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import NonCallableMock, patch
 
 from nose.tools import raises
-from openstack.exceptions import ResourceNotFound
+from openstack.exceptions import ResourceNotFound, ConflictException
 
 from openstack_identity import OpenstackIdentity
 from missing_mandatory_param_error import MissingMandatoryParamError
@@ -59,6 +59,12 @@ class OpenstackIdentityTests(unittest.TestCase):
             description=expected_details.description,
             is_enabled=expected_details.is_enabled,
         )
+
+    @raises(ConflictException)
+    def test_create_project_forwards_conflict_exception(self):
+        instance = OpenstackIdentity()
+        self.identity_api.create_project.side_effect = ConflictException
+        instance.create_project(NonCallableMock(), NonCallableMock())
 
     @staticmethod
     @raises(MissingMandatoryParamError)
