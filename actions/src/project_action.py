@@ -2,7 +2,7 @@ from typing import Tuple, Optional, Dict, Callable, Union
 
 from openstack.identity.v3.project import Project
 
-from openstack_identity import OpenstackIdentity
+from openstack_api.openstack_identity import OpenstackIdentity
 from structs.project_details import ProjectDetails
 from st2common.runners.base_action import Action
 

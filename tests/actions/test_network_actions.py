@@ -2,12 +2,12 @@ from unittest.mock import create_autospec, NonCallableMock
 
 from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
-from openstack_network import OpenstackNetwork
+from openstack_api.openstack_network import OpenstackNetwork
 from src.network_actions import NetworkActions
-from tests.openstack_action_test_case import OpenstackActionTestCase
+from tests.actions.openstack_action_test_base import OpenstackActionTestBase
 
 
-class TestNetworkActions(OpenstackActionTestCase):
+class TestNetworkActions(OpenstackActionTestBase):
     """
     Unit tests for the Network.* actions
     """

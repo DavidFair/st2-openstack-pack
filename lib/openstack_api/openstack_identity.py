@@ -2,15 +2,15 @@ from typing import Optional
 
 from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
+
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
-from openstack_connection import OpenstackConnection
+from openstack_api.openstack_wrapper_base import OpenstackWrapperBase
 from structs.project_details import ProjectDetails
 
 
-class OpenstackIdentity:
-    @staticmethod
+class OpenstackIdentity(OpenstackWrapperBase):
     def create_project(
-        cloud_account: str, project_details: ProjectDetails
+        self, cloud_account: str, project_details: ProjectDetails
     ) -> Optional[Project]:
         """
         Creates a given project with the provided details
@@ -22,7 +22,7 @@ class OpenstackIdentity:
         if not project_details.name:
             raise MissingMandatoryParamError("The project name is missing")
 
-        with OpenstackConnection(cloud_account) as conn:
+        with self._connection_cls(cloud_account) as conn:
             try:
                 return conn.identity.create_project(
                     name=project_details.name,
@@ -48,12 +48,13 @@ class OpenstackIdentity:
         if not project:
             return False
 
-        with OpenstackConnection(cloud_account) as conn:
+        with self._connection_cls(cloud_account) as conn:
             result = conn.identity.delete_project(project=project, ignore_missing=False)
             return result is None  # Where None == success
 
-    @staticmethod
-    def find_project(cloud_account: str, project_identifier: str) -> Optional[Project]:
+    def find_project(
+        self, cloud_account: str, project_identifier: str
+    ) -> Optional[Project]:
         """
         Finds a project with the given name or ID
         :param cloud_account: The clouds entry to use
@@ -66,5 +67,5 @@ class OpenstackIdentity:
                 "A project name or project ID must be provided"
             )
 
-        with OpenstackConnection(cloud_account) as conn:
+        with self._connection_cls(cloud_account) as conn:
             return conn.identity.find_project(project_identifier, ignore_missing=True)

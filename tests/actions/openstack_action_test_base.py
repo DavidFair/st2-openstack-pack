@@ -6,7 +6,7 @@ from st2tests.actions import BaseActionTestCase
 
 
 # pylint: disable=too-few-public-methods
-class OpenstackActionTestCase(BaseActionTestCase, ABC):
+class OpenstackActionTestBase(BaseActionTestCase, ABC):
     def get_action_instance(self, config=None, api_mock: Mock = None):
         """
         Wraps get action instance allowing a developer to additionally

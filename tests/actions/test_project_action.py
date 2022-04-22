@@ -1,12 +1,12 @@
 from unittest.mock import create_autospec, NonCallableMock
 
-from openstack_identity import OpenstackIdentity
+from openstack_api.openstack_identity import OpenstackIdentity
 from src.project_action import ProjectAction
 from structs.project_details import ProjectDetails
-from tests.openstack_action_test_case import OpenstackActionTestCase
+from tests.actions.openstack_action_test_base import OpenstackActionTestBase
 
 
-class TestProjectAction(OpenstackActionTestCase):
+class TestProjectAction(OpenstackActionTestBase):
     """
     Unit tests the Project.* actions
     """

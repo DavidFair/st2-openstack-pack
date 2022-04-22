@@ -6,7 +6,7 @@ from st2common.runners.base_action import Action
 
 from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
-from openstack_network import OpenstackNetwork
+from openstack_api.openstack_network import OpenstackNetwork
 from structs.network_details import NetworkDetails
 from structs.network_rbac import NetworkRbac
 
