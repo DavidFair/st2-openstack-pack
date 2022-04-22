@@ -1,7 +1,7 @@
 ---
 description: Security group list
 enabled: true
-entry_point: src/security_group.py
+entry_point: src/security_group_actions.py
 name: security.group.list
 parameters:
   submodule:

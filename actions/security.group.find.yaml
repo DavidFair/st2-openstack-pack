@@ -1,0 +1,24 @@
+---
+description: Finds a security group
+enabled: true
+entry_point: src/security_group_actions.py
+name: security.group.find
+parameters:
+  submodule:
+    default: security_group_show
+    immutable: true
+    type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  project_identifier:
+    description: The name of Openstack ID of the associated project
+    required: true
+    type: string
+  group_identifier:
+    description: The name of Openstack ID of the associated security group
+    required: true
+    type: string
+runner_type: python-script

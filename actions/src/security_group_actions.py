@@ -1,22 +1,27 @@
 import os
 from subprocess import Popen, PIPE
+from typing import Dict, Tuple, Union
 
 from openstack.exceptions import ResourceNotFound, ConflictException
+from openstack.network.v2.security_group import SecurityGroup
+
 from openstack_action import OpenstackAction
+from openstack_api.openstack_security_groups import OpenstackSecurityGroups
 
-SOURCECMD = "source /etc/openstack/openrc/admin-openrc.sh;"
 
-
-class SecurityGroup(OpenstackAction):
-    def __init__(self, *args, **kwargs):
+class SecurityGroupActions(OpenstackAction):
+    def __init__(self, *args, config: Dict, **kwargs):
         """constructor class"""
         super().__init__(*args, **kwargs)
+        self._api: OpenstackSecurityGroups = config.get(
+            "openstack_api", OpenstackSecurityGroups()
+        )
 
         # lists possible functions that could be run as an action
         self.func = {
             "security_group_create": self.security_group_create,
             "security_group_rule_create": self.security_group_rule_create,
-            "security_group_show": self.security_group_show,
+            "security_group_show": self.security_group_find,
             "security_group_list": self.security_group_list
             # security_group_delete
             # security_group_update
@@ -42,32 +47,28 @@ class SecurityGroup(OpenstackAction):
             return False, f"Security Group Creation Failed {err}"
         return True, security_group
 
-    def security_group_show(self, project, security_group):
+    def security_group_find(
+        self,
+        cloud_account: str,
+        project_identifier: str,
+        security_group_identifier: str,
+    ) -> Tuple[bool, Union[SecurityGroup, str]]:
         """
         Show a security group
-        :param project: ID or Name,
-        :param security_group: ID or Name
-        :return: (status (Bool), reason (String))
+        :param cloud_account: The associated clouds.yaml account
+        :param project_identifier: Openstack Project ID or Name,
+        :param security_group_identifier: Openstack Security Group ID or Name
+        :return: status, Security Group object or error message
         """
-
-        # if project specified - show security group info for that project
-        if project:
-            project_id = self.find_resource_id(project, self.conn.identity.find_project)
-            if not project_id:
-                return False, f"Project not found with Name or ID {project}"
-
-            try:
-                security_group = self.conn.network.find_security_group(
-                    security_group, project_id=project_id
-                )
-            except ResourceNotFound as err:
-                return False, f"Finding Project Failed {err}"
-        else:
-            try:
-                security_group = self.conn.network.find_security_group(security_group)
-            except ResourceNotFound as err:
-                return False, f"Finding Project Failed {err}"
-        return True, security_group
+        security_group = self._api.find_security_group(
+            cloud_account, project_identifier, security_group_identifier
+        )
+        output = (
+            security_group
+            if security_group
+            else "The requested security group could not be found"
+        )
+        return bool(security_group), output
 
     def security_group_list(self, project):
         """

@@ -62,7 +62,7 @@ class OpenstackNetwork(OpenstackWrapperBase):
             cloud_account, project_identifier=details.project_identifier
         )
         if not project:
-            raise ItemNotFoundError("The specified project was not found")
+            raise ItemNotFoundError()
 
         with self._connection_cls(cloud_account) as conn:
             return conn.network.create_network(

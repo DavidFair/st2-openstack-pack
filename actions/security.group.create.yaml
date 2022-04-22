@@ -1,7 +1,7 @@
 ---
 description: Create a new security group
 enabled: true
-entry_point: src/security_group.py
+entry_point: src/security_group_actions.py
 name: security.group.create
 parameters:
   submodule:
