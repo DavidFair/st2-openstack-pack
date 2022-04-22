@@ -1,14 +1,21 @@
 import unittest
-from unittest.mock import MagicMock, NonCallableMock, create_autospec
+from unittest.mock import (
+    MagicMock,
+    NonCallableMock,
+    create_autospec,
+    Mock,
+    NonCallableMagicMock,
+)
 
 from nose.tools import raises
 
+from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_identity import OpenstackIdentity
 from openstack_api.openstack_security_groups import OpenstackSecurityGroups
 
 
-class OpenstackNetworkTests(unittest.TestCase):
+class OpenstackSecurityGroupsTests(unittest.TestCase):
     def setUp(self) -> None:
         """
         Sets up the various mocks required in this test
@@ -75,3 +82,47 @@ class OpenstackNetworkTests(unittest.TestCase):
             description=description,
         )
         assert result == self.network_api.create_security_group.return_value
+
+    @raises(ItemNotFoundError)
+    def test_create_rule_rule_not_found_raises(self):
+        self.instance.find_security_group = Mock(return_value=None)
+        self.instance.create_security_group_rule(NonCallableMock(), NonCallableMock())
+
+    @raises(ValueError)
+    def test_create_rule_throws_for_missing_port_start(self):
+        mocked_details = NonCallableMock()
+        mocked_details.port_range = (None, 1)
+        self.instance.create_security_group_rule(NonCallableMock(), mocked_details)
+
+    @raises(ValueError)
+    def test_create_rule_throws_for_missing_port_end(self):
+        mocked_details = NonCallableMock()
+        mocked_details.port_range = (1, None)
+        self.instance.create_security_group_rule(NonCallableMock(), mocked_details)
+
+    def test_create_rule_forwards_result(self):
+        cloud, mock_details = NonCallableMock(), NonCallableMagicMock()
+        self.instance.find_security_group = Mock()
+        returned = self.instance.create_security_group_rule(cloud, mock_details)
+
+        self.instance.find_security_group.assert_called_once_with(
+            cloud,
+            mock_details.project_identifier,
+            mock_details.security_group_identifier,
+        )
+        self.identity_module.find_mandatory_project.assert_called_once_with(
+            cloud, mock_details.project_identifier
+        )
+
+        self.network_api.create_security_group_rule.assert_called_once_with(
+            project_id=self.identity_module.find_mandatory_project.return_value.id,
+            security_group_id=self.instance.find_security_group.return_value.id,
+            name=mock_details.rule_name,
+            direction=mock_details.direction.value.lower(),
+            ether_type=mock_details.ip_version.value.lower(),
+            protocol=mock_details.protocol.value.lower(),
+            remote_ip_prefix=mock_details.remote_ip_cidr,
+            port_range_min=mock_details.port_range[0],
+            port_range_max=mock_details.port_range[1],
+        )
+        assert returned == self.network_api.create_security_group_rule.return_value

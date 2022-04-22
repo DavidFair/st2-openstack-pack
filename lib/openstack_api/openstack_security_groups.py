@@ -1,11 +1,14 @@
 from typing import Optional
 
 from openstack.network.v2.security_group import SecurityGroup
+from openstack.network.v2.security_group_rule import SecurityGroupRule
 
+from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_connection import OpenstackConnection
 from openstack_api.openstack_identity import OpenstackIdentity
 from openstack_api.openstack_wrapper_base import OpenstackWrapperBase
+from structs.security_group_rule_details import SecurityGroupRuleDetails
 
 
 class OpenstackSecurityGroups(OpenstackWrapperBase):
@@ -22,8 +25,8 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
         """
         Finds a given security group
         :param cloud_account: The associated clouds.yaml account
-        :param project_identifier:
-        :param security_group_identifier:
+        :param project_identifier: The name or Openstack ID of the associated project
+        :param security_group_identifier: The name or Openstack ID of the associated security group
         :return: The security group if found
         """
         security_group_identifier = security_group_identifier.strip()
@@ -60,4 +63,40 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
                 name=group_name,
                 description=group_description,
                 project_id=project.id,
+            )
+
+    def create_security_group_rule(
+        self, cloud_account: str, details: SecurityGroupRuleDetails
+    ) -> SecurityGroupRule:
+        """
+        :param cloud_account: The associated clouds.yaml account
+        :param details: The details of the new security group rule
+        :return: The created rule
+        """
+        security_group = self.find_security_group(
+            cloud_account, details.project_identifier, details.security_group_identifier
+        )
+        if not security_group:
+            raise ItemNotFoundError("The security group specified was not found")
+
+        start_port = details.port_range[0]
+        end_port = details.port_range[1]
+        if not (start_port and end_port):
+            raise ValueError("A starting and ending port must both be provided")
+
+        project = self._identity_api.find_mandatory_project(
+            cloud_account, details.project_identifier
+        )
+
+        with self._connection_cls(cloud_account) as conn:
+            return conn.network.create_security_group_rule(
+                project_id=project.id,
+                security_group_id=security_group.id,
+                name=details.rule_name,
+                direction=details.direction.value.lower(),
+                ether_type=details.ip_version.value.lower(),
+                protocol=details.protocol.value.lower(),
+                remote_ip_prefix=details.remote_ip_cidr,
+                port_range_min=details.port_range[0],
+                port_range_max=details.port_range[1],
             )

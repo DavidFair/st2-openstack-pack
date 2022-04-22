@@ -8,32 +8,54 @@ parameters:
     default: security_group_rule_create
     immutable: true
     type: string
-  security_group:
-    description: "Create rule in this security group (Name or ID)"
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
     required: true
     type: string
-  dst_port:
-    description: "Destination port, may be a range: 137:139 (Default: null;
-          only required for proto tcp and udp)"
-    default: null
+  project_identifier:
+    description: The name of Openstack ID of the associated project
+    required: true
     type: string
-  project:
-    description: "Owner's project (Name or ID)"
+  security_group_identifier:
+    description: The name of Openstack ID of the associated security group
+    required: true
     type: string
+  start_port:
+    description: "Destination port range start (or ICMP type)"
+    required: true
+    type: int
+  end_port:
+    description: "Destination port range end (up to and including this port)"
+    required: true
+    type: int
   direction:
     default: "egress"
     description: Direction the rule applies (egress or ingress)
-    type: string
+    type: enum
+    required: true
+    values:
+      - egress
+      - ingress
   ether_type:
     default: IPv4
     description: Ethertype of network traffic (IPv4, IPv6)
     type: string
+    enum:
+      - IPV4
+      - IPV6
   protocol:
     default: tcp
     description: IP protocol (icmp, tcp, udp; default - tcp)
     type: string
+    required: true
+    enum:
+      - TCP
+      - UDP
+      - ICMP
   remote_ip_prefix:
     default: 0.0.0.0/0
     description: Remote IP address block (may use CIDR notation; default - 0.0.0.0/0)
+    required: true
     type: string
 runner_type: python-script

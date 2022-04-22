@@ -5,8 +5,12 @@ from typing import Dict, Tuple, Union, Optional
 from openstack.exceptions import ResourceNotFound, ConflictException
 from openstack.network.v2.security_group import SecurityGroup
 
+from enums.ip_version import IPVersion
+from enums.network_direction import NetworkDirection
+from enums.protocol import Protocol
 from openstack_action import OpenstackAction
 from openstack_api.openstack_security_groups import OpenstackSecurityGroups
+from structs.security_group_rule_details import SecurityGroupRuleDetails
 
 
 class SecurityGroupActions(OpenstackAction):
@@ -102,56 +106,40 @@ class SecurityGroupActions(OpenstackAction):
         return True, all_groups
 
     def security_group_rule_create(
-        self, security_group, project, dst_port, **security_group_kwargs
+        self,
+        cloud_account: str,
+        project_identifier: str,
+        security_group_identifier: str,
+        direction: str,
+        ether_type: str,
+        protocol: str,
+        remote_ip_prefix: str,
+        rule_name: Optional[str],
+        start_port: int,
+        end_port: int,
     ):
         """
-        Creature security group rule
-        :param security_group: (String) Name or ID
-        :param project: (String) Name or ID,
-        :param dst_port: (String: <Int>:<Int>) Min and Max port range,
-        :param security_group_kwargs: other_args - see action definintion yaml file for details
-        :return: (status (Bool), reason (String))
+        :param cloud_account: The associated clouds.yaml account
+        :param project_identifier: Openstack Project ID or Name,
+        :param security_group_identifier: Openstack Security Group ID or Name
+        :param direction: the direction this rule applies to (ingress/egress)
+        :param ether_type: the IP version this rule applies to (IPV4/IPV6)
+        :param protocol: the protocol this rule applies to (TCP/UDP/ICMP)
+        :param remote_ip_prefix: The destination CIDR this applies to
+        :param rule_name: An optional name for this new rule
+        :param start_port: The starting port this applies to
+        :param end_port: The final port (inclusive) this applies to
+        :return: status, Security Group object or error message
         """
-
-        # get project id
-        project_id = self.find_resource_id(project, self.conn.identity.find_project)
-        if not project_id:
-            return False, f"Project not found with Name or ID {project}"
-
-        # get security group id
-        security_group_id = self.find_resource_id(
-            security_group, self.conn.network.find_security_group, project_id=project_id
+        details = SecurityGroupRuleDetails(
+            security_group_identifier=security_group_identifier,
+            project_identifier=project_identifier,
+            direction=NetworkDirection[direction.upper()],
+            ip_version=IPVersion[ether_type.upper()],
+            protocol=Protocol[protocol.upper()],
+            remote_ip_cidr=remote_ip_prefix,
+            port_range=(start_port, end_port),
+            rule_name=rule_name,
         )
-        if not security_group_id:
-            return (
-                False,
-                f"Security group not found with Name or ID {security_group} for Project {project}",
-            )
-
-        # get min and max port ranges
-        if dst_port:
-            port_range_min, port_range_max = dst_port.split(":")
-        else:
-            port_range_min, port_range_max = None, None
-
-        try:
-            security_group_rule = self.conn.network.create_security_group_rule(
-                project_id=project_id,
-                security_group_id=security_group_id,
-                port_range_max=port_range_max,
-                port_range_min=port_range_min,
-                **security_group_kwargs,
-            )
-        except ConflictException:
-            return (
-                True,
-                f"Security Group Rule direction={security_group_kwargs['direction']},"
-                f" ether_type={security_group_kwargs['ether_type']},"
-                f" protocol=security_group_kwargs['protocol'],"
-                f" remote_ip_prefix={security_group_kwargs['remote_ip_prefix']},"
-                f" dst_port={port_range_max}:{port_range_min}"
-                f" exist for project {project_id}",
-            )
-        except ResourceNotFound as err:
-            return False, f"Security group rule creation failed {err}"
-        return True, security_group_rule
+        rule = self._api.create_security_group_rule(cloud_account, details)
+        return bool(rule), rule
