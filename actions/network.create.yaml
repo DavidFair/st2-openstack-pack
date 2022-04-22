@@ -39,6 +39,6 @@ parameters:
   has_external_router:
     description: Whether or not this is the default external network
     type: boolean
-    default: False
+    default: True
 
 runner_type: python-script

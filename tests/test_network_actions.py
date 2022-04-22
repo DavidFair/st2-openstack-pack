@@ -93,6 +93,22 @@ class TestNetworkActions(OpenstackActionTestCase):
         expected = self.network_mock.create_network.return_value
         assert returned == (True, expected)
 
+    def test_create_network_mixed_case_enum(self):
+        """
+        Checks that regardless of case from Stackstorm the string
+        can be converted to an enum type
+        """
+        returned = self.action.network_create(
+            cloud_account=NonCallableMock(),
+            project_identifier=NonCallableMock(),
+            network_name=NonCallableMock(),
+            network_description=NonCallableMock(),
+            provider_network_type="vXLaN",
+            port_security_enabled=NonCallableMock(),
+            has_external_router=NonCallableMock(),
+        )
+        assert returned[0] is True
+
     def test_create_rbac_successful(self):
         """
         Tests the action returns the new RBAC policy

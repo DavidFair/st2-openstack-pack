@@ -4,6 +4,7 @@ from unittest.mock import NonCallableMock, patch, Mock, ANY
 
 from nose.tools import raises
 
+from enums.network_providers import NetworkProviders
 from enums.rbac_network_actions import RbacNetworkActions
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
@@ -82,9 +83,31 @@ class OpenstackNetworkTests(unittest.TestCase):
             self.instance.create_network, NonCallableMock(), NonCallableMock()
         )
 
-    def test_create_project_forwards_result(self):
+    def test_create_network_serialises_enum(self):
         """
-        Tests that create project will forward the result from Openstack
+        Tests that the NetworkProviders enum gets serialised into
+        Openstack compatible JSON
+        """
+        expected = {NetworkProviders.VXLAN: "vxlan"}
+
+        for enum_key, expected_val in expected.items():
+            with patch("openstack_network.OpenstackIdentity"):
+                mock_details = NonCallableMock()
+                mock_details.provider_network_type = enum_key
+
+                self.instance.create_network(NonCallableMock(), mock_details)
+                self.network_api.create_network.assert_called_once_with(
+                    project_id=ANY,
+                    name=ANY,
+                    description=ANY,
+                    is_port_security_enabled=ANY,
+                    is_router_external=ANY,
+                    provider_network_type=expected_val,
+                )
+
+    def test_create_network_forwards_result(self):
+        """
+        Tests that create network will forward the result from Openstack
         """
         with patch("openstack_network.OpenstackIdentity") as patched_ident:
             cloud_account, mock_details = NonCallableMock(), NonCallableMock()
@@ -92,7 +115,7 @@ class OpenstackNetworkTests(unittest.TestCase):
             returned = self.instance.create_network(cloud_account, mock_details)
             self.mocked_connection.assert_called_once_with(cloud_account)
             self.network_api.create_network(
-                project_id=patched_ident.find_project.return_value,
+                project_id=patched_ident.find_project.return_value.id,
                 name=mock_details.name,
                 description=mock_details.description,
                 provider_network_type=mock_details.provider_network_type,
@@ -145,8 +168,9 @@ class OpenstackNetworkTests(unittest.TestCase):
 
             self.mocked_connection.assert_called_once_with(cloud)
             self.network_api.create_rbac_policy.assert_called_once_with(
-                object_id=self.instance.find_network.return_value,
-                target_project_id=patched_ident.find_project.return_value,
+                object_id=self.instance.find_network.return_value.id,
+                object_type="network",
+                target_project_id=patched_ident.find_project.return_value.id,
                 action=ANY,
             )
             assert returned == self.network_api.create_rbac_policy.return_value
@@ -178,7 +202,10 @@ class OpenstackNetworkTests(unittest.TestCase):
             with patch("openstack_network.OpenstackIdentity"):
                 self.instance.create_network_rbac(NonCallableMock(), rbac_details)
                 self.network_api.create_rbac_policy.assert_called_once_with(
-                    object_id=ANY, target_project_id=ANY, action=expected_val
+                    object_id=ANY,
+                    object_type=ANY,
+                    target_project_id=ANY,
+                    action=expected_val,
                 )
                 self.network_api.create_rbac_policy.reset_mock()
 

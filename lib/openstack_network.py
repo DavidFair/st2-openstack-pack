@@ -59,18 +59,18 @@ class OpenstackNetwork:
         if not details.name:
             raise MissingMandatoryParamError("A network name is required")
 
-        project_id = OpenstackIdentity.find_project(
+        project = OpenstackIdentity.find_project(
             cloud_account, project_identifier=details.project_identifier
         )
-        if not project_id:
+        if not project:
             raise ItemNotFoundError("The specified project was not found")
 
         with OpenstackConnection(cloud_account) as conn:
             return conn.network.create_network(
-                project_id=project_id,
+                project_id=project.id,
                 name=details.name,
                 description=details.description,
-                provider_network_type=details.provider_network_type,
+                provider_network_type=details.provider_network_type.value.lower(),
                 is_port_security_enabled=details.port_security_enabled,
                 is_router_external=details.has_external_router,
             )
@@ -96,22 +96,24 @@ class OpenstackNetwork:
         :param rbac_details: The details associated with the new policy
         :return: The RBAC Policy if it was created, else None
         """
-        network_id = self.find_network(
+        network = self.find_network(
             cloud_account, network_identifier=rbac_details.network_identifier
         )
-        if not network_id:
+        if not network:
             raise ItemNotFoundError("The specified network was not found")
 
-        project_id = OpenstackIdentity.find_project(
+        project = OpenstackIdentity.find_project(
             cloud_account, project_identifier=rbac_details.project_identifier
         )
-        if not project_id:
+        if not project:
             raise ItemNotFoundError("The specified project was not found")
 
         with OpenstackConnection(cloud_account) as conn:
             return conn.network.create_rbac_policy(
-                object_id=network_id,
-                target_project_id=project_id,
+                object_id=network.id,
+                # We only support network RBAC policies at the moment
+                object_type="network",
+                target_project_id=project.id,
                 action=self._parse_rbac_action(rbac_details.action),
             )
 
@@ -122,12 +124,12 @@ class OpenstackNetwork:
         :param network_identifier: The name or Openstack ID to use
         :return: True if deleted, else False
         """
-        network_id = self.find_network(cloud_account, network_identifier)
-        if not network_id:
+        network = self.find_network(cloud_account, network_identifier)
+        if not network:
             return False
 
         with OpenstackConnection(cloud_account) as conn:
-            result = conn.network.delete_network(network_id, ignore_missing=False)
+            result = conn.network.delete_network(network, ignore_missing=False)
             return result is None
 
     def delete_network_rbac(self, cloud_account: str, rbac_identifier: str) -> bool:

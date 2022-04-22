@@ -77,7 +77,7 @@ class NetworkActions(Action):
         :return: The created network object, if any
         """
 
-        network_type = NetworkProviders[provider_network_type]
+        network_type = NetworkProviders[provider_network_type.upper()]
         details = NetworkDetails(
             name=network_name,
             description=network_description,

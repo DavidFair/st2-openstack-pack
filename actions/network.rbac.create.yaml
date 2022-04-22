@@ -25,6 +25,7 @@ parameters:
     description: Action for the RBAC policy ("access_as_external" or "access_as_shared")
     required: true
     type: string
+    default: shared
     enum:
       - shared
       - external
