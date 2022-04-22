@@ -8,14 +8,19 @@ parameters:
     default: security_group_create
     immutable: true
     type: string
-  name:
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  group_name:
     description: New security group name
     required: true
     type: string
-  description:
+  group_description:
     description: Security group description
     type: string
-  project:
-    description: Owner's project (Name or ID)
+  project_identifier:
+    description: The name of Openstack ID of the associated project
     type: string
 runner_type: python-script

@@ -1,6 +1,6 @@
 import os
 from subprocess import Popen, PIPE
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 
 from openstack.exceptions import ResourceNotFound, ConflictException
 from openstack.network.v2.security_group import SecurityGroup
@@ -27,25 +27,25 @@ class SecurityGroupActions(OpenstackAction):
             # security_group_update
         }
 
-    def security_group_create(self, project, **security_group_kwargs):
+    def security_group_create(
+        self,
+        cloud_account: str,
+        group_name: str,
+        group_description: str,
+        project_identifier: str,
+    ) -> Tuple[bool, SecurityGroup]:
         """
         Create a Security Group for a Project
-        :param project: (String) ID or Name,
-        :param security_group_kwargs - see action definintion yaml file for details
-        :return: (status (Bool), reason (String))
+        :param cloud_account: The associated clouds.yaml account
+        :param group_name: The new name for the security group
+        :param group_description: The description to associate with the new group
+        :param project_identifier: Openstack Project ID or Name,
+        :return: status, the new Security group or None
         """
-        # get project id
-        project_id = self.find_resource_id(project, self.conn.identity.find_project)
-        if not project_id:
-            return False, f"Project not found with Name or ID {project}"
-
-        try:
-            security_group = self.conn.network.create_security_group(
-                project_id=project_id, **security_group_kwargs
-            )
-        except ResourceNotFound as err:
-            return False, f"Security Group Creation Failed {err}"
-        return True, security_group
+        security_group = self._api.create_security_group(
+            cloud_account, group_name, group_description, project_identifier
+        )
+        return bool(security_group), security_group
 
     def security_group_find(
         self,
