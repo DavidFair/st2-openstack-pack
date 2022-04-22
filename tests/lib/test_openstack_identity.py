@@ -4,6 +4,7 @@ from unittest.mock import NonCallableMock, ANY, Mock, MagicMock
 from nose.tools import raises
 from openstack.exceptions import ConflictException
 
+from exceptions.item_not_found_error import ItemNotFoundError
 from openstack_api.openstack_identity import OpenstackIdentity
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from structs.project_details import ProjectDetails
@@ -150,3 +151,22 @@ class OpenstackIdentityTests(unittest.TestCase):
             project_identifier.strip(), ignore_missing=True
         )
         assert found == self.identity_api.find_project.return_value
+
+    def test_find_mandatory_project_forwards(self):
+        """
+        Check the arguments are forwarded as-is and the result returned
+        """
+        self.instance.find_project = Mock()
+        args = (NonCallableMock(), NonCallableMock())
+        returned = self.instance.find_mandatory_project(*args)
+
+        self.instance.find_project.assert_called_once_with(*args)
+        assert returned == self.instance.find_project.return_value
+
+    @raises(ItemNotFoundError)
+    def test_find_mandatory_project_raises_for_missing(self):
+        """
+        Check that a missing project will raise correctly
+        """
+        self.instance.find_project = Mock(return_value=None)
+        self.instance.find_mandatory_project(NonCallableMock(), NonCallableMock())

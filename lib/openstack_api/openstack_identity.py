@@ -3,6 +3,7 @@ from typing import Optional
 from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
 
+from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_wrapper_base import OpenstackWrapperBase
 from structs.project_details import ProjectDetails
@@ -51,6 +52,20 @@ class OpenstackIdentity(OpenstackWrapperBase):
         with self._connection_cls(cloud_account) as conn:
             result = conn.identity.delete_project(project=project, ignore_missing=False)
             return result is None  # Where None == success
+
+    def find_mandatory_project(
+        self, cloud_account: str, project_identifier: str
+    ) -> Project:
+        """
+        Finds a property or throws a ItemNotFoundError
+        :param cloud_account: The clouds entry to use
+        :param project_identifier: The name or Openstack ID for the project
+        :return: The found project, or raises a ItemNotFoundError
+        """
+        found = self.find_project(cloud_account, project_identifier)
+        if found:
+            return found
+        raise ItemNotFoundError("The specified project was not found")
 
     def find_project(
         self, cloud_account: str, project_identifier: str
