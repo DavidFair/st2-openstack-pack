@@ -1,8 +1,5 @@
-import os
-from subprocess import Popen, PIPE
-from typing import Dict, Tuple, Union, Optional
+from typing import Dict, Tuple, Union, Optional, List
 
-from openstack.exceptions import ResourceNotFound, ConflictException
 from openstack.network.v2.security_group import SecurityGroup
 
 from enums.ip_version import IPVersion
@@ -74,36 +71,17 @@ class SecurityGroupActions(OpenstackAction):
         )
         return bool(security_group), output
 
-    def security_group_list(self, project):
+    def security_group_list(
+        self, cloud_account: str, project_identifier
+    ) -> Tuple[bool, List[SecurityGroup]]:
         """
         List Security groups for a project
-        :param project:(String) Name or ID
-        :return: (status (Bool), reason (String))
+        :param cloud_account: The associated clouds.yaml account
+        :param project_identifier: Openstack Project ID or Name,
+        :return: status, list of associated security groups
         """
-        project_id = self.find_resource_id(project, self.conn.identity.find_project)
-        if not project_id:
-            return False, f"Project not found with Name or ID {project}"
-
-        # needs to be called when creating new project, openstacksdk fails to find security groups unless this is called
-        with (
-            Popen(
-                SOURCECMD
-                + f"openstack security group list --project {project_id} -f json",
-                shell=True,
-                stdout=PIPE,
-                env=os.environ.copy(),
-            )
-        ) as process_handle:
-            _ = process_handle.communicate()[0]
-
-        try:
-            security_groups = self.conn.network.security_groups(project_id=project_id)
-            all_groups = []
-            for group in security_groups:
-                all_groups.append(group)
-        except ResourceNotFound as err:
-            return False, f"Listing Security Groups Failed {err}"
-        return True, all_groups
+        found = self._api.search_security_group(cloud_account, project_identifier)
+        return bool(found), found
 
     def security_group_rule_create(
         self,

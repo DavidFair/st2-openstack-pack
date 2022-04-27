@@ -59,6 +59,21 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         )
         assert return_val == self.network_api.find_security_group.return_value
 
+    def test_search_security_groups(self):
+        cloud, project = NonCallableMock(), NonCallableMock()
+        return_val = self.instance.search_security_group(cloud, project)
+
+        self.identity_module.find_mandatory_project.assert_called_once_with(
+            cloud, project_identifier=project
+        )
+        found_project = self.identity_module.find_mandatory_project.return_value
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.network_api.security_groups.assert_called_once_with(
+            project_id=found_project.id
+        )
+        assert return_val == list(self.network_api.security_groups.return_value)
+
     @raises(MissingMandatoryParamError)
     def test_create_security_group_missing_name_raises(self):
         self.instance.create_security_group(

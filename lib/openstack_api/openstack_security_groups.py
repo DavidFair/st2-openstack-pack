@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from openstack.network.v2.security_group import SecurityGroup
 from openstack.network.v2.security_group_rule import SecurityGroupRule
@@ -42,6 +42,21 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
                 security_group_identifier, project_id=project.id, ignore_missing=True
             )
 
+    def search_security_group(
+        self, cloud_account: str, project_identifier: str
+    ) -> List[SecurityGroup]:
+        """
+        Returns a list of security groups associated with an account
+        :param cloud_account: The associated clouds.yaml account
+        :param project_identifier: The project to get all associated security groups with
+        :return: A list of all security groups
+        """
+        project = self._identity_api.find_mandatory_project(
+            cloud_account, project_identifier=project_identifier
+        )
+        with self._connection_cls(cloud_account) as conn:
+            return list(conn.network.security_groups(project_id=project.id))
+
     def create_security_group(
         self,
         cloud_account: str,
@@ -49,6 +64,14 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
         group_description: str,
         project_identifier: str,
     ) -> SecurityGroup:
+        """
+        Creates a new security group in the given project
+        :param cloud_account: The associated clouds.yaml account
+        :param group_name: The new security group name
+        :param group_description: The new security group description
+        :param project_identifier: The name or ID of the project to create a security group in
+        :return: The created security group
+        """
         group_name = group_name.strip()
         if not group_name:
             raise MissingMandatoryParamError(

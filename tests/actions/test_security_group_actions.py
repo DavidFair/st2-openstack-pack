@@ -41,6 +41,22 @@ class TestNetworkActions(OpenstackActionTestBase):
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
+    def test_search_security_groups_successful(self):
+        cloud, project = NonCallableMock(), NonCallableMock()
+        returned = self.action.security_group_list(cloud, project)
+
+        self.security_group_mock.search_security_group.assert_called_with(
+            cloud, project
+        )
+        expected = self.security_group_mock.search_security_group.return_value
+        assert returned == (True, expected)
+
+    def test_search_security_groups_failed(self):
+        self.security_group_mock.search_security_group.return_value = []
+        returned = self.action.security_group_list(NonCallableMock(), NonCallableMock())
+
+        assert returned == (False, [])
+
     def test_create_security_group_success(self):
         args = [NonCallableMock() for _ in range(4)]
         result = self.action.security_group_create(*args)
