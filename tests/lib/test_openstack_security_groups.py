@@ -2,16 +2,15 @@ import unittest
 from unittest.mock import (
     MagicMock,
     NonCallableMock,
-    create_autospec,
     Mock,
     NonCallableMagicMock,
+    patch,
 )
 
 from nose.tools import raises
 
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
-from openstack_api.openstack_identity import OpenstackIdentity
 from openstack_api.openstack_security_groups import OpenstackSecurityGroups
 
 
@@ -22,9 +21,12 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         """
         super().setUp()
         self.mocked_connection = MagicMock()
-        self.instance = OpenstackSecurityGroups(self.mocked_connection)
-        self.identity_module = create_autospec(OpenstackIdentity)
-        self.instance._identity_api = self.identity_module
+        with patch(
+            "openstack_api.openstack_security_groups.OpenstackIdentity"
+        ) as identity_mock:
+            self.instance = OpenstackSecurityGroups(self.mocked_connection)
+            self.identity_module = identity_mock.return_value
+        # pylint: disable =
         self.network_api = (
             self.mocked_connection.return_value.__enter__.return_value.network
         )
@@ -41,6 +43,9 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         )
 
     def test_find_security_group_forwards_result(self):
+        """
+        Tests find security group forwards found result
+        """
         cloud, project, security_group = (
             NonCallableMock(),
             NonCallableMock(),
@@ -60,6 +65,9 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         assert return_val == self.network_api.find_security_group.return_value
 
     def test_search_security_groups(self):
+        """
+        Tests search security group returns the expected list
+        """
         cloud, project = NonCallableMock(), NonCallableMock()
         return_val = self.instance.search_security_group(cloud, project)
 
@@ -76,6 +84,9 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
 
     @raises(MissingMandatoryParamError)
     def test_create_security_group_missing_name_raises(self):
+        """
+        Test that the security group identifier is correctly checked
+        """
         self.instance.create_security_group(
             cloud_account=NonCallableMock(),
             group_description=NonCallableMock(),
@@ -84,6 +95,9 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         )
 
     def test_create_security_group_forwards_result(self):
+        """
+        Tests find create group forwards the new group
+        """
         cloud, name, description, project = (NonCallableMock() for _ in range(4))
         result = self.instance.create_security_group(cloud, name, description, project)
 
@@ -99,23 +113,35 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         assert result == self.network_api.create_security_group.return_value
 
     @raises(ItemNotFoundError)
-    def test_create_rule_rule_not_found_raises(self):
+    def test_create_rule_group_not_found_raises(self):
+        """
+        Tests that create security group rule raises if not security group is found
+        """
         self.instance.find_security_group = Mock(return_value=None)
         self.instance.create_security_group_rule(NonCallableMock(), NonCallableMock())
 
     @raises(ValueError)
     def test_create_rule_throws_for_missing_port_start(self):
+        """
+        Tests that missing port starting values throw
+        """
         mocked_details = NonCallableMock()
         mocked_details.port_range = (None, 1)
         self.instance.create_security_group_rule(NonCallableMock(), mocked_details)
 
     @raises(ValueError)
     def test_create_rule_throws_for_missing_port_end(self):
+        """
+        Tests that missing port final values throw
+        """
         mocked_details = NonCallableMock()
         mocked_details.port_range = (1, None)
         self.instance.create_security_group_rule(NonCallableMock(), mocked_details)
 
     def test_create_rule_forwards_result(self):
+        """
+        Tests that create rule returns the new rule
+        """
         cloud, mock_details = NonCallableMock(), NonCallableMagicMock()
         self.instance.find_security_group = Mock()
         returned = self.instance.create_security_group_rule(cloud, mock_details)
@@ -132,7 +158,6 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         self.network_api.create_security_group_rule.assert_called_once_with(
             project_id=self.identity_module.find_mandatory_project.return_value.id,
             security_group_id=self.instance.find_security_group.return_value.id,
-            rule_name=mock_details.rule_name,
             direction=mock_details.direction.value.lower(),
             ether_type=mock_details.ip_version.value.lower(),
             protocol=mock_details.protocol.value.lower(),

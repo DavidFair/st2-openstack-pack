@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Union, Optional, List, Callable
+from typing import Dict, Tuple, Union, List, Callable
 
 from openstack.network.v2.security_group import SecurityGroup
 from st2common.runners.base_action import Action
@@ -25,6 +25,8 @@ class SecurityGroupActions(Action):
         func: Callable = getattr(self, submodule)
         return func(**kwargs)
 
+    # The method signature is the same as the OS wrapper
+    # pylint: disable=duplicate-code
     def security_group_create(
         self,
         cloud_account: str,
@@ -80,6 +82,7 @@ class SecurityGroupActions(Action):
         found = self._api.search_security_group(cloud_account, project_identifier)
         return bool(found), found
 
+    # pylint: disable=too-many-arguments
     def security_group_rule_create(
         self,
         cloud_account: str,

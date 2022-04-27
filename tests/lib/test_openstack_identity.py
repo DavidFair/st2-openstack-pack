@@ -5,8 +5,8 @@ from nose.tools import raises
 from openstack.exceptions import ConflictException
 
 from exceptions.item_not_found_error import ItemNotFoundError
-from openstack_api.openstack_identity import OpenstackIdentity
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
+from openstack_api.openstack_identity import OpenstackIdentity
 from structs.project_details import ProjectDetails
 
 
