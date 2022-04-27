@@ -132,7 +132,7 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         self.network_api.create_security_group_rule.assert_called_once_with(
             project_id=self.identity_module.find_mandatory_project.return_value.id,
             security_group_id=self.instance.find_security_group.return_value.id,
-            name=mock_details.rule_name,
+            rule_name=mock_details.rule_name,
             direction=mock_details.direction.value.lower(),
             ether_type=mock_details.ip_version.value.lower(),
             protocol=mock_details.protocol.value.lower(),

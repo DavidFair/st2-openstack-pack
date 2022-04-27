@@ -19,8 +19,10 @@ parameters:
     type: string
   group_description:
     description: Security group description
+    required: true
     type: string
   project_identifier:
     description: The name of Openstack ID of the associated project
+    required: true
     type: string
 runner_type: python-script

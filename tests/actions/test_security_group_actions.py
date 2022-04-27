@@ -91,7 +91,6 @@ class TestNetworkActions(OpenstackActionTestBase):
             ether_type=mocked_details.ip_version.value.lower(),
             protocol=mocked_details.protocol.value.lower(),
             remote_ip_prefix=mocked_details.remote_ip_cidr,
-            rule_name=mocked_details.rule_name,
             start_port=mocked_details.port_range[0],
             end_port=mocked_details.port_range[1],
         )

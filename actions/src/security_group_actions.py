@@ -89,7 +89,6 @@ class SecurityGroupActions(Action):
         ether_type: str,
         protocol: str,
         remote_ip_prefix: str,
-        rule_name: Optional[str],
         start_port: int,
         end_port: int,
     ):
@@ -101,7 +100,6 @@ class SecurityGroupActions(Action):
         :param ether_type: the IP version this rule applies to (IPV4/IPV6)
         :param protocol: the protocol this rule applies to (TCP/UDP/ICMP)
         :param remote_ip_prefix: The destination CIDR this applies to
-        :param rule_name: An optional name for this new rule
         :param start_port: The starting port this applies to
         :param end_port: The final port (inclusive) this applies to
         :return: status, Security Group object or error message
@@ -114,7 +112,6 @@ class SecurityGroupActions(Action):
             protocol=Protocol[protocol.upper()],
             remote_ip_cidr=remote_ip_prefix,
             port_range=(start_port, end_port),
-            rule_name=rule_name,
         )
         rule = self._api.create_security_group_rule(cloud_account, details)
         return bool(rule), rule

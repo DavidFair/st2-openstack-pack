@@ -17,4 +17,3 @@ class SecurityGroupRuleDetails:
     remote_ip_cidr: str
 
     port_range: Optional[Tuple[int, int]] = None
-    rule_name: Optional[str] = None

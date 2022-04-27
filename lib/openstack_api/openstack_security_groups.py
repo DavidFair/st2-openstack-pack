@@ -115,7 +115,6 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
             return conn.network.create_security_group_rule(
                 project_id=project.id,
                 security_group_id=security_group.id,
-                name=details.rule_name,
                 direction=details.direction.value.lower(),
                 ether_type=details.ip_version.value.lower(),
                 protocol=details.protocol.value.lower(),

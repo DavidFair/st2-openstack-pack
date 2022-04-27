@@ -17,7 +17,7 @@ parameters:
     description: The name of Openstack ID of the associated project
     required: true
     type: string
-  group_identifier:
+  security_group_identifier:
     description: The name of Openstack ID of the associated security group
     required: true
     type: string

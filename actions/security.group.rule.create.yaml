@@ -10,7 +10,6 @@ parameters:
     type: string
   cloud_account:
     description: The clouds.yaml account to use whilst performing this action
-    default: ''
     required: true
     type: string
   project_identifier:
@@ -24,28 +23,28 @@ parameters:
   start_port:
     description: "Destination port range start (or ICMP type)"
     required: true
-    type: int
+    type: integer
   end_port:
     description: "Destination port range end (up to and including this port)"
     required: true
-    type: int
+    type: integer
   direction:
     default: "egress"
     description: Direction the rule applies (egress or ingress)
-    type: enum
+    type: string
     required: true
-    values:
+    enum:
       - egress
       - ingress
   ether_type:
-    default: IPv4
+    default: IPV4
     description: Ethertype of network traffic (IPv4, IPv6)
     type: string
     enum:
       - IPV4
       - IPV6
   protocol:
-    default: tcp
+    default: TCP
     description: IP protocol (icmp, tcp, udp; default - tcp)
     type: string
     required: true
