@@ -1,16 +1,16 @@
-from typing import Dict, Tuple, Union, Optional, List
+from typing import Dict, Tuple, Union, Optional, List, Callable
 
 from openstack.network.v2.security_group import SecurityGroup
+from st2common.runners.base_action import Action
 
 from enums.ip_version import IPVersion
 from enums.network_direction import NetworkDirection
 from enums.protocol import Protocol
-from openstack_action import OpenstackAction
 from openstack_api.openstack_security_groups import OpenstackSecurityGroups
 from structs.security_group_rule_details import SecurityGroupRuleDetails
 
 
-class SecurityGroupActions(OpenstackAction):
+class SecurityGroupActions(Action):
     def __init__(self, *args, config: Dict, **kwargs):
         """constructor class"""
         super().__init__(*args, **kwargs)
@@ -18,15 +18,12 @@ class SecurityGroupActions(OpenstackAction):
             "openstack_api", OpenstackSecurityGroups()
         )
 
-        # lists possible functions that could be run as an action
-        self.func = {
-            "security_group_create": self.security_group_create,
-            "security_group_rule_create": self.security_group_rule_create,
-            "security_group_show": self.security_group_find,
-            "security_group_list": self.security_group_list
-            # security_group_delete
-            # security_group_update
-        }
+    def run(self, submodule: str, **kwargs):
+        """
+        Dynamically dispatches to the method wanted
+        """
+        func: Callable = getattr(self, submodule)
+        return func(**kwargs)
 
     def security_group_create(
         self,

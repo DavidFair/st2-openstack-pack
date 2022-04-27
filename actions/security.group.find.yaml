@@ -5,7 +5,7 @@ entry_point: src/security_group_actions.py
 name: security.group.find
 parameters:
   submodule:
-    default: security_group_show
+    default: security_group_find
     immutable: true
     type: string
   cloud_account:
