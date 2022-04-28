@@ -49,7 +49,7 @@ class TestRoleActions(OpenstackActionTestBase):
             role_identifier=role,
         )
 
-    def test_has_role(self):
+    def test_has_role_true(self):
         """
         Tests has role makes the correct call and returns the result
         """
@@ -64,8 +64,19 @@ class TestRoleActions(OpenstackActionTestBase):
             project_identifier=project,
             role_identifier=role,
         )
-        expected = self.role_mock.has_role.return_value
-        assert returned == expected
+
+        assert returned[0] is True
+        assert "has the specified" in returned[1]
+
+    def test_has_role_false(self):
+        """
+        Tests has role makes the correct call and returns a valid string
+        """
+        self.role_mock.has_role.return_value = False
+        returned = self.action.user_has_role(*(NonCallableMock() for _ in range(4)))
+
+        assert returned[0] is False
+        assert "does not have the specified" in returned[1]
 
     def test_run_dispatch(self):
         """

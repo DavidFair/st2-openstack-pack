@@ -150,7 +150,7 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         self.identity_module.find_user.assert_called_once_with(cloud, user)
         self.instance.find_role.assert_called_once_with(cloud, role)
 
-        self._api.validate_user_has_project_role.assert_called_once_with(
+        self._api.validate_user_has_role.assert_called_once_with(
             project=self.identity_module.find_mandatory_project.return_value,
             user=self.identity_module.find_user.return_value,
             role=self.instance.find_role.return_value,

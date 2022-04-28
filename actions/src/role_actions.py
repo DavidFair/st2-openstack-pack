@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, Tuple
 
 from st2common.runners.base_action import Action
 
@@ -74,7 +74,7 @@ class RoleActions(Action):
         user_identifier: str,
         project_identifier: str,
         role_identifier: str,
-    ) -> bool:
+    ) -> Tuple[bool, str]:
         """
         Checks a given user has the specified role
         :param cloud_account: The account from the clouds configuration to use
@@ -83,9 +83,15 @@ class RoleActions(Action):
         :param role_identifier: Name or ID of the role to check
         :return: If the user has the role (bool)
         """
-        return self._api.has_role(
+        found = self._api.has_role(
             cloud_account=cloud_account,
             user_identifier=user_identifier,
             project_identifier=project_identifier,
             role_identifier=role_identifier,
         )
+        out = (
+            "The user has the specified role"
+            if found
+            else "The user does not have the specified role"
+        )
+        return bool(found), out
