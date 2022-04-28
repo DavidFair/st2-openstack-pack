@@ -2,6 +2,7 @@ from typing import Optional
 
 from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
+from openstack.identity.v3.user import User
 
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
@@ -84,3 +85,17 @@ class OpenstackIdentity(OpenstackWrapperBase):
 
         with self._connection_cls(cloud_account) as conn:
             return conn.identity.find_project(project_identifier, ignore_missing=True)
+
+    def find_user(self, cloud_account: str, user_identifier: str) -> Optional[User]:
+        """
+        Finds a user with the given name or ID
+        :param cloud_account: The clouds entry to use
+        :param user_identifier: The name or Openstack ID for the user
+        :return: The found user, or None
+        """
+        user_identifier = user_identifier.strip()
+        if not user_identifier:
+            raise MissingMandatoryParamError("A user name or ID must be provided")
+
+        with self._connection_cls(cloud_account) as conn:
+            return conn.identity.find_user(user_identifier, ignore_missing=True)

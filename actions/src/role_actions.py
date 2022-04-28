@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple, Optional
 
 from openstack.exceptions import ResourceNotFound
 
@@ -16,74 +16,75 @@ class RoleActions(OpenstackAction):
         self.func = {
             "role_add": self.role_add,
             "role_remove": self.role_remove,
-            "role_validate_user": self.validate_user
+            "user_has_role": self.user_has_role
             # role update
         }
 
     # TODO Show all roles on a project
-
-    # pylint: disable=missing-function-docstring
-    def get_ids(self, role, project, user_domain, user):
-        role_id = self.find_resource_id(role, self.conn.identity.find_role)
-        project_id = self.find_resource_id(project, self.conn.identity.find_project)
-        user_domain_id = self.find_resource_id(
-            user_domain, self.conn.identity.find_domain
+    def role_add(
+        self,
+        cloud_account: str,
+        user_identifier: str,
+        project_identifier: str,
+        role_identifier: str,
+    ) -> bool:
+        """
+        Add a given user a project role
+        :param cloud_account: The account from the clouds configuration to use
+        :param user_identifier: Name or ID of the user to assign a role to
+        :param project_identifier: Name or ID of the project this applies to
+        :param role_identifier: Name or ID of the role to assign
+        :return: status
+        """
+        self._api.assign_role_to_user(
+            cloud_account=cloud_account,
+            user_identifier=user_identifier,
+            project_identifier=project_identifier,
+            role_identifier=role_identifier,
         )
-        user_id = self.find_resource_id(
-            user, self.conn.identity.find_user, domain_id=user_domain_id
+        return True  # the above method always returns None
+
+    def role_remove(
+        self,
+        cloud_account: str,
+        user_identifier: str,
+        project_identifier: str,
+        role_identifier: str,
+    ) -> bool:
+        """
+        Removes a project role from a given user
+        :param cloud_account: The account from the clouds configuration to use
+        :param user_identifier: Name or ID of the user to remove a role from
+        :param project_identifier: Name or ID of the project this applies to
+        :param role_identifier: Name or ID of the role to remove
+        :return: status
+        """
+        self._api.remove_role_from_user(
+            cloud_account=cloud_account,
+            user_identifier=user_identifier,
+            project_identifier=project_identifier,
+            role_identifier=role_identifier,
         )
-        return role_id, project_id, user_id
+        return True
 
-    def role_add(self, role, project, user_domain, user):
+    def user_has_role(
+        self,
+        cloud_account: str,
+        user_identifier: str,
+        project_identifier: str,
+        role_identifier: str,
+    ) -> bool:
         """
-        Add User Role to Project
-        :param role: (String) Name or ID
-        :param project: (String) Name or ID
-        :param user_domain: (String) Name or ID,
-        :param user: (String) Name or ID
-        :return: (status (Bool), reason (String))
+        Checks a given user has the specified role
+        :param cloud_account: The account from the clouds configuration to use
+        :param user_identifier: Name or ID of the user to check
+        :param project_identifier: Name or ID of the project this applies to
+        :param role_identifier: Name or ID of the role to check
+        :return: If the user has the role (bool)
         """
-        role_id, project_id, user_id = self.get_ids(role, project, user_domain, user)
-        try:
-            role_assignment = self.conn.identity.assign_project_role_to_user(
-                project_id, user_id, role_id
-            )
-        except ResourceNotFound as err:
-            return False, f"Role Assignment Failed {err}"
-        return True, role_assignment
-
-    def role_remove(self, role, project, user_domain, user):
-        """
-        Remove User Role to Project
-        :param role: (String) Name or ID
-        :param project: (String) Name or ID
-        :param user_domain: (String) Name or ID,
-        :param user: (String) Name or ID
-        :return: (status (Bool), reason (String))
-        """
-        role_id, project_id, user_id = self.get_ids(role, project, user_domain, user)
-        try:
-            role_assignment = self.conn.identity.unassign_project_role_from_user(
-                project_id, user_id, role_id
-            )
-        except ResourceNotFound as err:
-            return False, f"Role Assignment Failed {err}"
-        return True, role_assignment
-
-    def validate_user(self, role, project, user_domain, user):
-        """
-        Validate User Role to Project
-        :param role: (String) Name or ID
-        :param project: (String) Name or ID
-        :param user_domain: (String) Name or ID,
-        :param user: (String) Name or ID
-        :return: (status (Bool), reason (String))
-        """
-        role_id, project_id, user_id = self.get_ids(role, project, user_domain, user)
-        try:
-            exists_bool = self.conn.identity.validate_user_has_role(
-                project_id, user_id, role_id
-            )
-        except ResourceNotFound as err:
-            return False, f"Validation Failed {err}"
-        return True, exists_bool
+        return self._api.has_role(
+            cloud_account=cloud_account,
+            user_identifier=user_identifier,
+            project_identifier=project_identifier,
+            role_identifier=role_identifier,
+        )

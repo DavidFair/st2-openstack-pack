@@ -35,7 +35,7 @@ class ProjectAction(Action):
     ) -> Tuple[bool, str]:
         """
         Deletes a project
-        :param: cloud_account: The account from the clouds configuration to use
+        :param cloud_account: The account from the clouds configuration to use
         :param: project_name: (Either) The project name to delete
         :param: project_id: (Either) The project ID to delete
         :return: The result of the operation
@@ -72,7 +72,7 @@ class ProjectAction(Action):
         """
         Find and return a given project's properties. Expected
         to be called within a workflow and not directly.
-        :param: cloud_account: The account from the clouds configuration to use
+        :param cloud_account: The account from the clouds configuration to use
         :param: name: Name of new project
         :param: description: Description for new project
         :param: is_enabled: Set if new project enabled or disabled

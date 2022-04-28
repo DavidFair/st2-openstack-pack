@@ -170,3 +170,24 @@ class OpenstackIdentityTests(unittest.TestCase):
         """
         self.instance.find_project = Mock(return_value=None)
         self.instance.find_mandatory_project(NonCallableMock(), NonCallableMock())
+
+    @raises(MissingMandatoryParamError)
+    def test_find_user_missing_identifier(self):
+        """
+        Checks a missing user identifier will raise correctly
+        """
+        self.instance.find_user(NonCallableMock(), " \t")
+
+    def test_find_user_returns_result(self):
+        """
+        Checks that find_user returns the correct result
+        """
+        cloud, user = NonCallableMock(), NonCallableMock()
+        returned = self.instance.find_user(cloud, user)
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.identity_api.find_user.assert_called_once_with(
+            user.strip(), ignore_missing=True
+        )
+        expected = self.identity_api.find_user.return_value
+        assert returned == expected

@@ -1,27 +1,28 @@
 ---
-description: Validate if user has given role in project
+description: Checks if user has given role in project
 enabled: true
-entry_point: src/role.py
-name: role.validate.user
+entry_point: src/role_actions.py
+name: role.check.user
 parameters:
   submodule:
-    default: role_validate_user
+    default: user_has_role
     immutable: true
     type: string
-  project:
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
+  project_identifier:
     description: Project (Name or ID)
     required: true
     type: string
-  role:
-    description: Role (Name or ID)
+  role_identifier:
+    description: Role to check (Name or ID)
     required: true
     type: string
-  user:
-    description: User (Name or ID)
+  user_identifier:
+    description: User to check (Name or ID)
     type: string
     required: true
-  user_domain:
-    description: User Domain (Name or ID)
-    default: default
-    type: string
 runner_type: python-script
