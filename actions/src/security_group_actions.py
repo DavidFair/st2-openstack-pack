@@ -25,8 +25,6 @@ class SecurityGroupActions(Action):
         func: Callable = getattr(self, submodule)
         return func(**kwargs)
 
-    # The method signature is the same as the OS wrapper
-    # pylint: disable=duplicate-code
     def security_group_create(
         self,
         cloud_account: str,

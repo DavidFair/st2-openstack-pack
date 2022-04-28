@@ -22,6 +22,7 @@ class RoleActions(Action):
         return func(**kwargs)
 
     # TODO Show all roles on a project
+    # pylint: disable=duplicate-code
     def role_add(
         self,
         cloud_account: str,
@@ -45,6 +46,7 @@ class RoleActions(Action):
         )
         return True  # the above method always returns None
 
+    # pylint: disable=duplicate-code
     def role_remove(
         self,
         cloud_account: str,
@@ -68,6 +70,7 @@ class RoleActions(Action):
         )
         return True
 
+    # pylint: disable=duplicate-code
     def user_has_role(
         self,
         cloud_account: str,
