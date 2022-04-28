@@ -1,12 +1,16 @@
+from typing import Dict
+
 from openstack.exceptions import ResourceNotFound
 
 from openstack_action import OpenstackAction
+from openstack_api.openstack_roles import OpenstackRoles
 
 
-class Role(OpenstackAction):
-    def __init__(self, *args, **kwargs):
-        """constructor class"""
-        super().__init__(*args, **kwargs)
+class RoleActions(OpenstackAction):
+    def __init__(self, *args, config: Dict = None, **kwargs):
+        # DI handled in OpenstackActionTestCase
+        super().__init__(*args, config=config, **kwargs)
+        self._api: OpenstackRoles = config.get("openstack_api", OpenstackRoles())
 
         # lists possible functions that could be run as an action
         self.func = {

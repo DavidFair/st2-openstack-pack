@@ -26,7 +26,7 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
         ) as identity_mock:
             self.instance = OpenstackSecurityGroups(self.mocked_connection)
             self.identity_module = identity_mock.return_value
-        # pylint: disable =
+
         self.network_api = (
             self.mocked_connection.return_value.__enter__.return_value.network
         )
