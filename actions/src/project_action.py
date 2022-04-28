@@ -13,13 +13,6 @@ class ProjectAction(Action):
         super().__init__(*args, config=config, **kwargs)
         self._api: OpenstackIdentity = config.get("openstack_api", OpenstackIdentity())
 
-        # lists possible functions that could be run as an action
-        self.func = {
-            "project_find": self.project_find,
-            "project_create": self.project_create,
-            "project_delete": self.project_delete,
-        }
-
     def run(self, submodule: str, **kwargs):
         """
         Dynamically dispatches

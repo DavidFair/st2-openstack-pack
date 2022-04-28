@@ -1,24 +1,25 @@
-from typing import Dict, Tuple, Optional
+from typing import Dict, Callable
 
-from openstack.exceptions import ResourceNotFound
+from st2common.runners.base_action import Action
 
-from openstack_action import OpenstackAction
 from openstack_api.openstack_roles import OpenstackRoles
 
 
-class RoleActions(OpenstackAction):
+class RoleActions(Action):
     def __init__(self, *args, config: Dict = None, **kwargs):
         # DI handled in OpenstackActionTestCase
         super().__init__(*args, config=config, **kwargs)
         self._api: OpenstackRoles = config.get("openstack_api", OpenstackRoles())
 
-        # lists possible functions that could be run as an action
-        self.func = {
-            "role_add": self.role_add,
-            "role_remove": self.role_remove,
-            "user_has_role": self.user_has_role
-            # role update
-        }
+    def run(self, submodule: str, **kwargs):
+        """
+        Dynamically dispatches
+        :param submodule: the method to run
+        :param kwargs: Arguments to the method
+        :return: The output from that method
+        """
+        func: Callable = getattr(self, submodule)
+        return func(**kwargs)
 
     # TODO Show all roles on a project
     def role_add(

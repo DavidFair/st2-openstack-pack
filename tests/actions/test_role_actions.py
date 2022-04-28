@@ -66,3 +66,9 @@ class TestRoleActions(OpenstackActionTestBase):
         )
         expected = self.role_mock.has_role.return_value
         assert returned == expected
+
+    def test_run_dispatch(self):
+        """
+        Tests that dynamic dispatch works for all the expected methods
+        """
+        self._test_run_dynamic_dispatch(["role_add", "role_remove", "user_has_role"])
