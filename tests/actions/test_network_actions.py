@@ -42,22 +42,13 @@ class TestNetworkActions(OpenstackActionTestBase):
         assert returned[0] is False
         assert "could not be found" in returned[1]
 
-    def test_find_rbac_found(self):
+    def test_find_rbac_forwards(self):
         """
-        Tests the action returns the found RBACPolicy object
+        Tests the action returns the found RBACPolicy list as-is
         """
-        returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
-        expected = self.network_mock.find_network_rbac.return_value
-        assert returned == (True, expected)
-
-    def test_find_rbac_not_found(self):
-        """
-        Tests the status and message when a policy isn't found
-        """
-        self.network_mock.find_network_rbac.return_value = None
-        returned = self.action.network_rbac_find(NonCallableMock(), NonCallableMock())
-        assert returned[0] is False
-        assert "could not be found" in returned[1]
+        returned = self.action.network_rbac_search(NonCallableMock(), NonCallableMock())
+        expected = self.network_mock.search_network_rbacs.return_value
+        assert returned == expected
 
     def test_create_network_failed(self):
         """
@@ -173,7 +164,7 @@ class TestNetworkActions(OpenstackActionTestBase):
         """
         expected_methods = [
             "network_find",
-            "network_rbac_find",
+            "network_rbac_search",
             "network_create",
             "network_rbac_create",
             "network_delete",

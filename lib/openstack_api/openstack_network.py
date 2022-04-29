@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from openstack.network.v2.network import Network
 from openstack.network.v2.rbac_policy import RBACPolicy
@@ -6,6 +6,7 @@ from openstack.network.v2.rbac_policy import RBACPolicy
 from enums.rbac_network_actions import RbacNetworkActions
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
+from openstack_api.openstack_connection import OpenstackConnection
 from openstack_api.openstack_wrapper_base import OpenstackWrapperBase
 from openstack_api.openstack_identity import OpenstackIdentity
 from structs.network_details import NetworkDetails
@@ -13,6 +14,10 @@ from structs.network_rbac import NetworkRbac
 
 
 class OpenstackNetwork(OpenstackWrapperBase):
+    def __init__(self, connection_cls=OpenstackConnection):
+        super().__init__(connection_cls)
+        self._identity_api = OpenstackIdentity(connection_cls)
+
     def find_network(
         self, cloud_account: str, network_identifier: str
     ) -> Optional[Network]:
@@ -29,21 +34,21 @@ class OpenstackNetwork(OpenstackWrapperBase):
         with self._connection_cls(cloud_account) as conn:
             return conn.network.find_network(network_identifier, ignore_missing=True)
 
-    def find_network_rbac(
-        self, cloud_account: str, rbac_identifier: str
-    ) -> Optional[RBACPolicy]:
+    def search_network_rbacs(
+        self, cloud_account: str, project_identifier: str
+    ) -> List[RBACPolicy]:
         """
-        Finds a given RBAC network policy
+        Finds a given RBAC network policy associated with a project
         :param cloud_account: The associated clouds.yaml account
-        :param rbac_identifier: The name or Openstack ID of the policy
-        :return: The RBACPolicy object or None
+        :param project_identifier: The name or Openstack ID of the project the policy applies to
+        :return: A list of found RBAC policies for the given project
         """
-        rbac_identifier = rbac_identifier.strip()
-        if not rbac_identifier:
-            raise MissingMandatoryParamError("A RBAC name or ID is required")
+        project = self._identity_api.find_mandatory_project(
+            cloud_account, project_identifier
+        )
 
         with self._connection_cls(cloud_account) as conn:
-            return conn.network.find_rbac_policy(rbac_identifier, ignore_missing=True)
+            return list(conn.network.rbac_policies(project_id=project.id))
 
     def create_network(
         self, cloud_account: str, details: NetworkDetails
@@ -58,11 +63,9 @@ class OpenstackNetwork(OpenstackWrapperBase):
         if not details.name:
             raise MissingMandatoryParamError("A network name is required")
 
-        project = OpenstackIdentity(self._connection_cls).find_project(
-            cloud_account, project_identifier=details.project_identifier
+        project = self._identity_api.find_mandatory_project(
+            cloud_account, details.project_identifier
         )
-        if not project:
-            raise ItemNotFoundError()
 
         with self._connection_cls(cloud_account) as conn:
             return conn.network.create_network(
@@ -101,11 +104,9 @@ class OpenstackNetwork(OpenstackWrapperBase):
         if not network:
             raise ItemNotFoundError("The specified network was not found")
 
-        project = OpenstackIdentity(self._connection_cls).find_project(
+        project = self._identity_api.find_mandatory_project(
             cloud_account, project_identifier=rbac_details.project_identifier
         )
-        if not project:
-            raise ItemNotFoundError("The specified project was not found")
 
         with self._connection_cls(cloud_account) as conn:
             return conn.network.create_rbac_policy(

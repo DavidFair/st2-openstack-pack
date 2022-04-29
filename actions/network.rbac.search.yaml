@@ -1,11 +1,11 @@
 ---
-description: Finds a Network RBAC rule
+description: Searches for Network RBAC policies applying to a project
 enabled: true
 entry_point: src/network_actions.py
-name: network.rbac.find
+name: network.rbac.search
 parameters:
   submodule:
-    default: network_rbac_find
+    default: network_rbac_search
     immutable: true
     type: string
   cloud_account:
@@ -13,8 +13,8 @@ parameters:
     default: ''
     required: true
     type: string
-  rbac_identifier:
-    description: RBAC policy Name or ID
+  project_identifier:
+    description: The project name or ID these policies apply to
     required: True
     type: string
 runner_type: python-script

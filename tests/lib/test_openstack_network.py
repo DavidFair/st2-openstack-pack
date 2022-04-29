@@ -1,6 +1,5 @@
 import unittest
-from typing import Callable
-from unittest.mock import NonCallableMock, Mock, ANY, MagicMock
+from unittest.mock import NonCallableMock, Mock, ANY, MagicMock, patch
 
 from nose.tools import raises
 
@@ -18,10 +17,12 @@ class OpenstackNetworkTests(unittest.TestCase):
         """
         super().setUp()
         self.mocked_connection = MagicMock()
-        self.instance = OpenstackNetwork(self.mocked_connection)
-        self.identity_api = (
-            self.mocked_connection.return_value.__enter__.return_value.identity
-        )
+        with patch(
+            "openstack_api.openstack_network.OpenstackIdentity"
+        ) as identity_mock:
+            self.instance = OpenstackNetwork(self.mocked_connection)
+            self.identity_module = identity_mock.return_value
+
         self.network_api = (
             self.mocked_connection.return_value.__enter__.return_value.network
         )
@@ -46,25 +47,21 @@ class OpenstackNetworkTests(unittest.TestCase):
         )
         assert returned == self.network_api.find_network.return_value
 
-    @raises(MissingMandatoryParamError)
-    def test_find_network_missing_identifier_raises(self):
-        """
-        Tests that a missing network identifier raises an error
-        """
-        self.instance.find_network_rbac(NonCallableMock(), " \t")
-
-    def test_find_network_forwards_results(self):
+    def test_search_network_forwards_results(self):
         """
         Tests that find network forwards its results as-is
         """
         cloud, identifier = NonCallableMock(), NonCallableMock()
-        result = self.instance.find_network_rbac(cloud, identifier)
+        result = self.instance.search_network_rbacs(cloud, identifier)
 
-        self.mocked_connection.assert_called_once_with(cloud)
-        self.network_api.find_rbac_policy.assert_called_once_with(
-            identifier.strip(), ignore_missing=True
+        self.identity_module.find_mandatory_project.assert_called_once_with(
+            cloud, identifier
         )
-        assert result == self.network_api.find_rbac_policy.return_value
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.network_api.rbac_policies.assert_called_once_with(
+            project_id=self.identity_module.find_mandatory_project.return_value.id
+        )
+        assert result == list(self.network_api.rbac_policies.return_value)
 
     @raises(MissingMandatoryParamError)
     def test_create_network_no_name(self):
@@ -74,15 +71,6 @@ class OpenstackNetworkTests(unittest.TestCase):
         mocked_details = NonCallableMock()
         mocked_details.name = " \t"
         self.instance.create_network(NonCallableMock(), mocked_details)
-
-    @raises(ItemNotFoundError)
-    def test_create_network_when_no_found_project(self):
-        """
-        Tests that create network will raise if no project is found
-        """
-        self._run_project_not_found_test(
-            self.instance.create_network, NonCallableMock(), NonCallableMock()
-        )
 
     def test_create_network_serialises_enum(self):
         """
@@ -114,7 +102,7 @@ class OpenstackNetworkTests(unittest.TestCase):
         returned = self.instance.create_network(cloud_account, mock_details)
         self.mocked_connection.assert_called_with(cloud_account)
         self.network_api.create_network(
-            project_id=self.identity_api.find_project.return_value.id,
+            project_id=self.identity_module.find_mandatory_project.return_value.id,
             name=mock_details.name,
             description=mock_details.description,
             provider_network_type=mock_details.provider_network_type,
@@ -123,17 +111,6 @@ class OpenstackNetworkTests(unittest.TestCase):
         )
         assert returned == self.network_api.create_network.return_value
 
-    def _run_project_not_found_test(self, method: Callable, *args, **kwargs):
-        """
-        Test helper which emulates what happens if the project is not found
-        from the identity API.
-        :param method: The method (as a callable) to test
-        :param args: Args to forward to the method
-        :param kwargs: Kwargs to forward to the method
-        """
-        self.identity_api.find_project.return_value = None
-        return method(*args, **kwargs)
-
     @raises(ItemNotFoundError)
     def test_create_network_rbac_network_not_found(self):
         """
@@ -141,15 +118,6 @@ class OpenstackNetworkTests(unittest.TestCase):
         """
         self.instance.find_network = Mock(return_value=None)
         self.instance.create_network_rbac(NonCallableMock(), NonCallableMock())
-
-    @raises(ItemNotFoundError)
-    def test_create_network_rbac_project_not_found(self):
-        """
-        Tests that create RBAC (network) will throw if a project isn't found
-        """
-        self._run_project_not_found_test(
-            self.instance.create_network_rbac, NonCallableMock(), NonCallableMock()
-        )
 
     def test_create_rbac_uses_found_project_and_network(self):
         """
@@ -166,7 +134,7 @@ class OpenstackNetworkTests(unittest.TestCase):
         self.network_api.create_rbac_policy.assert_called_once_with(
             object_id=self.instance.find_network.return_value.id,
             object_type="network",
-            target_project_id=self.identity_api.find_project.return_value.id,
+            target_project_id=self.identity_module.find_mandatory_project.return_value.id,
             action=ANY,
         )
         assert returned == self.network_api.create_rbac_policy.return_value

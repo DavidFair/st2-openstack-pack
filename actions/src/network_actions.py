@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, Optional, Callable
+from typing import Dict, Union, Tuple, Optional, Callable, List
 
 from openstack.network.v2.network import Network
 from openstack.network.v2.rbac_policy import RBACPolicy
@@ -41,18 +41,16 @@ class NetworkActions(Action):
         output = network if network else "The requested network could not be found"
         return bool(network), output
 
-    def network_rbac_find(
-        self, cloud_account: str, rbac_identifier: str
-    ) -> Tuple[bool, Union[RBACPolicy, str]]:
+    def network_rbac_search(
+        self, cloud_account: str, project_identifier: str
+    ) -> List[RBACPolicy]:
         """
-        Finds a given Network RBAC policy
+        Finds all Network RBAC policies belonging applying to a project
         :param cloud_account: The account from the clouds configuration to use
-        :param rbac_identifier: RBAC Name or ID
-        :return: status, RBAC Policy object or error message
+        :param project_identifier: The project this applies to
+        :return: List of found RBAC policies
         """
-        policy = self._api.find_network_rbac(cloud_account, rbac_identifier)
-        output = policy if policy else "The requested policy could not be found"
-        return bool(policy), output
+        return self._api.search_network_rbacs(cloud_account, project_identifier)
 
     # pylint: disable=too-many-arguments
     def network_create(
