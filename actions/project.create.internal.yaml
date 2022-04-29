@@ -2,21 +2,21 @@
 description: Create internal project orquesta workflow
 enabled: true
 entry_point: workflows/project.create.internal.yaml
-name: project.create.internal
+name: workflow.project.create.internal
 parameters:
   project_name:
     required: true
     type: string
     description: Project Name to create
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ""
+    required: true
+    type: string
   project_description:
     required: true
     type: string
     description: Project Description
-  network_name:
-    required: true
-    type: string
-    default: "Internal"
-    description: Network (Name or ID) to create Project in
   admin_user_list:
     required: true
     type: array
