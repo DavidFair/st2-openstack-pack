@@ -7,3 +7,4 @@ class Protocol(_AutoName):
     TCP = auto()
     UDP = auto()
     ICMP = auto()
+    ANY = auto()

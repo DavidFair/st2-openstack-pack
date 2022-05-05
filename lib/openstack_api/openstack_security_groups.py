@@ -3,6 +3,7 @@ from typing import Optional, List
 from openstack.network.v2.security_group import SecurityGroup
 from openstack.network.v2.security_group_rule import SecurityGroupRule
 
+from enums.protocol import Protocol
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_connection import OpenstackConnection
@@ -102,10 +103,16 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
         if not security_group:
             raise ItemNotFoundError("The security group specified was not found")
 
-        start_port = details.port_range[0]
-        end_port = details.port_range[1]
-        if not (start_port and end_port):
-            raise ValueError("A starting and ending port must both be provided")
+        start_port = str(details.port_range[0]).strip()
+        end_port = str(details.port_range[1]).strip()
+        self._validate_rule_ports(start_port, end_port)
+
+        # Map any values to None types as per OS API
+        protocol = (
+            None if details.protocol is Protocol.ANY else details.protocol.value.lower()
+        )
+        start_port = None if start_port == "*" else start_port
+        end_port = None if end_port == "*" else end_port
 
         project = self._identity_api.find_mandatory_project(
             cloud_account, details.project_identifier
@@ -117,8 +124,19 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
                 security_group_id=security_group.id,
                 direction=details.direction.value.lower(),
                 ether_type=details.ip_version.value.lower(),
-                protocol=details.protocol.value.lower(),
+                protocol=protocol,
                 remote_ip_prefix=details.remote_ip_cidr,
-                port_range_min=details.port_range[0],
-                port_range_max=details.port_range[1],
+                port_range_min=start_port,
+                port_range_max=end_port,
             )
+
+    @staticmethod
+    def _validate_rule_ports(start_port: str, end_port: str):
+        if len(start_port) == 0 or len(end_port) == 0:
+            raise ValueError("A starting and ending port must both be provided")
+        if not start_port.isdigit() and start_port != "*":
+            raise ValueError(
+                f"The starting port must be an integer or '*'. Got {start_port}"
+            )
+        if not end_port.isdigit() and end_port != "*":
+            raise ValueError(f"The end port must be an integer or '*'. Got {end_port}")

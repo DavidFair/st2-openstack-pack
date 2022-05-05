@@ -21,13 +21,13 @@ parameters:
     required: true
     type: string
   start_port:
-    description: "Destination port range start (or ICMP type)"
+    description: "Destination port range start (or ICMP type). * will match all ports"
     required: true
-    type: integer
+    type: string
   end_port:
-    description: "Destination port range end (up to and including this port)"
+    description: "Destination port range end (up to and including this port). * will match all ports"
     required: true
-    type: integer
+    type: string
   direction:
     default: "egress"
     description: Direction the rule applies (egress or ingress)
@@ -52,6 +52,7 @@ parameters:
       - TCP
       - UDP
       - ICMP
+      - ANY
   remote_ip_prefix:
     default: 0.0.0.0/0
     description: Remote IP address block (may use CIDR notation; default - 0.0.0.0/0)

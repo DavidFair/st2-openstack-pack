@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Tuple
 
 from enums.ip_version import IPVersion
 from enums.network_direction import NetworkDirection
@@ -16,4 +16,4 @@ class SecurityGroupRuleDetails:
     protocol: Protocol
     remote_ip_cidr: str
 
-    port_range: Optional[Tuple[int, int]] = None
+    port_range: Tuple[str, str]

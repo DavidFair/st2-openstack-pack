@@ -90,8 +90,8 @@ class SecurityGroupActions(Action):
         ether_type: str,
         protocol: str,
         remote_ip_prefix: str,
-        start_port: int,
-        end_port: int,
+        start_port: str,
+        end_port: str,
     ):
         """
         :param cloud_account: The associated clouds.yaml account
