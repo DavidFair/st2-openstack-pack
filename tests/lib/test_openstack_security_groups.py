@@ -81,7 +81,7 @@ class OpenstackSecurityGroupsTests(unittest.TestCase):
 
         self.mocked_connection.assert_called_once_with(cloud)
         self.network_api.security_groups.assert_called_once_with(
-            project_id=found_project.id
+            tenant_id=found_project.id
         )
         assert return_val == list(self.network_api.security_groups.return_value)
 

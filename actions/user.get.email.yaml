@@ -8,6 +8,11 @@ parameters:
     default: user_get_email
     immutable: true
     type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    default: ''
+    required: true
+    type: string
   user:
     description: "User to get email address for (name or ID)"
     required: true

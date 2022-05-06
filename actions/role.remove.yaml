@@ -25,4 +25,12 @@ parameters:
     description: User to remove from (Name or ID)
     type: string
     required: true
+  user_domain:
+    description: Authentication realm to search
+    type: string
+    required: true
+    default: stfc
+    enum:
+      - default
+      - stfc
 runner_type: python-script

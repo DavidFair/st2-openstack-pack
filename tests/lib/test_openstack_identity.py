@@ -4,6 +4,7 @@ from unittest.mock import NonCallableMock, ANY, Mock, MagicMock
 from nose.tools import raises
 from openstack.exceptions import ConflictException
 
+from enums.user_domains import UserDomains
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_identity import OpenstackIdentity
@@ -176,18 +177,23 @@ class OpenstackIdentityTests(unittest.TestCase):
         """
         Checks a missing user identifier will raise correctly
         """
-        self.instance.find_user(NonCallableMock(), " \t")
+        self.instance.find_user(NonCallableMock(), " \t", NonCallableMock())
 
     def test_find_user_returns_result(self):
         """
         Checks that find_user returns the correct result
         """
-        cloud, user = NonCallableMock(), NonCallableMock()
-        returned = self.instance.find_user(cloud, user)
+        cloud, user, domain = NonCallableMock(), NonCallableMock(), UserDomains.STFC
+        returned = self.instance.find_user(cloud, user, domain)
 
         self.mocked_connection.assert_called_once_with(cloud)
+        self.identity_api.find_domain.assert_called_once_with(
+            domain.value.lower().strip(), ignore_missing=False
+        )
         self.identity_api.find_user.assert_called_once_with(
-            user.strip(), ignore_missing=True
+            user.strip(),
+            domain_id=self.identity_api.find_domain.return_value.id,
+            ignore_missing=True,
         )
         expected = self.identity_api.find_user.return_value
         assert returned == expected

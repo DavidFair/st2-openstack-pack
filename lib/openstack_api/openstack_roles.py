@@ -4,6 +4,7 @@ from openstack.identity.v3.project import Project
 from openstack.identity.v3.role import Role
 from openstack.identity.v3.user import User
 
+from enums.user_domains import UserDomains
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_connection import OpenstackConnection
@@ -22,6 +23,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         user_identifier: str,
         project_identifier: str,
         role_identifier: str,
+        user_domain: UserDomains,
     ) -> Tuple[User, Project, Role]:
         """
         Finds the various OS objects required for role manipulation
@@ -29,7 +31,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         project = self._identity_api.find_mandatory_project(
             cloud_account, project_identifier
         )
-        user = self._identity_api.find_user(cloud_account, user_identifier)
+        user = self._identity_api.find_user(cloud_account, user_identifier, user_domain)
         role = self.find_role(cloud_account, role_identifier)
 
         if not user:
@@ -45,6 +47,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         user_identifier: str,
         project_identifier: str,
         role_identifier: str,
+        user_domain: UserDomains,
     ) -> None:
         """
         Assigns a given role to the specified user
@@ -52,9 +55,14 @@ class OpenstackRoles(OpenstackWrapperBase):
         :param user_identifier: Name or ID of the user to assign a role to
         :param project_identifier: Name or ID of the project this applies to
         :param role_identifier: Name or ID of the role to assign
+        :param user_domain: The realm the user can be found in
         """
         user, project, role = self._find_role_details(
-            cloud_account, user_identifier, project_identifier, role_identifier
+            cloud_account,
+            user_identifier,
+            project_identifier,
+            role_identifier,
+            user_domain,
         )
 
         with self._connection_cls(cloud_account) as conn:
@@ -66,7 +74,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         """
         Finds a given role based on an identifier
         :param cloud_account: The account from the clouds configuration to use
-        :param role_identifier: Name or ID of the role to assign
+        :param role_identifier: Name or ID of the role to find
         """
         role_identifier = role_identifier.strip()
         if not role_identifier:
@@ -81,6 +89,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         user_identifier: str,
         project_identifier: str,
         role_identifier: str,
+        user_domain: UserDomains,
     ) -> bool:
         """
         Checks if the specified user has the given role
@@ -88,9 +97,14 @@ class OpenstackRoles(OpenstackWrapperBase):
         :param user_identifier: Name or ID of the user to assign a role to
         :param project_identifier: Name or ID of the project this applies to
         :param role_identifier: Name or ID of the role to assign
+        :param user_domain: The user domain the account is associated with
         """
         user, project, role = self._find_role_details(
-            cloud_account, user_identifier, project_identifier, role_identifier
+            cloud_account,
+            user_identifier,
+            project_identifier,
+            role_identifier,
+            user_domain,
         )
 
         # Note: this changed as of commit
@@ -106,6 +120,7 @@ class OpenstackRoles(OpenstackWrapperBase):
         user_identifier: str,
         project_identifier: str,
         role_identifier: str,
+        user_domain: UserDomains,
     ) -> None:
         """
         Assigns a given role to the specified user
@@ -113,9 +128,14 @@ class OpenstackRoles(OpenstackWrapperBase):
         :param user_identifier: Name or ID of the user to assign a role to
         :param project_identifier: Name or ID of the project this applies to
         :param role_identifier: Name or ID of the role to assign
+        :param user_domain: The user domain the account is associated with
         """
         user, project, role = self._find_role_details(
-            cloud_account, user_identifier, project_identifier, role_identifier
+            cloud_account,
+            user_identifier,
+            project_identifier,
+            role_identifier,
+            user_domain,
         )
         with self._connection_cls(cloud_account) as conn:
             conn.identity.unassign_project_role_from_user(

@@ -159,6 +159,8 @@ tasks:
       project_identifier=<% ctx().project_uuid %>
       role_identifier="admin"
       user_identifier=<% item() %>
+      user_domain="default"
+
 #  create_stfc_roles:
 #   with: <% ctx(stfc_user_list) %>
 #   action: stackstorm_openstack.role.add

@@ -1,5 +1,6 @@
 from unittest.mock import create_autospec, NonCallableMock
 
+from enums.user_domains import UserDomains
 from openstack_api.openstack_roles import OpenstackRoles
 from src.role_actions import RoleActions
 from tests.actions.openstack_action_test_base import OpenstackActionTestBase
@@ -27,12 +28,13 @@ class TestRoleActions(OpenstackActionTestBase):
         """
         cloud = NonCallableMock()
         user, project, role = NonCallableMock(), NonCallableMock(), NonCallableMock()
-        self.action.role_add(cloud, user, project, role)
+        self.action.role_add(cloud, user, project, role, user_domain="StFC")
         self.role_mock.assign_role_to_user.assert_called_once_with(
             cloud_account=cloud,
             user_identifier=user,
             project_identifier=project,
             role_identifier=role,
+            user_domain=UserDomains.STFC,
         )
 
     def test_role_remove(self):
@@ -40,13 +42,15 @@ class TestRoleActions(OpenstackActionTestBase):
         Tests that role removal forwards to the correct API
         """
         cloud = NonCallableMock()
-        user, project, role = NonCallableMock(), NonCallableMock(), NonCallableMock()
-        self.action.role_remove(cloud, user, project, role)
+        role, project = NonCallableMock(), NonCallableMock()
+        domain, user = "stfc", NonCallableMock()
+        self.action.role_remove(cloud, user, project, role, domain)
         self.role_mock.remove_role_from_user.assert_called_once_with(
             cloud_account=cloud,
             user_identifier=user,
             project_identifier=project,
             role_identifier=role,
+            user_domain=UserDomains.STFC,
         )
 
     def test_has_role_true(self):
@@ -56,13 +60,16 @@ class TestRoleActions(OpenstackActionTestBase):
         cloud = NonCallableMock()
         user, project, role = NonCallableMock(), NonCallableMock(), NonCallableMock()
 
-        returned = self.action.user_has_role(cloud, user, project, role)
+        returned = self.action.user_has_role(
+            cloud, user, project, role, user_domain="default"
+        )
 
         self.role_mock.has_role.assert_called_once_with(
             cloud_account=cloud,
             user_identifier=user,
             project_identifier=project,
             role_identifier=role,
+            user_domain=UserDomains.DEFAULT,
         )
 
         assert returned[0] is True
@@ -73,7 +80,9 @@ class TestRoleActions(OpenstackActionTestBase):
         Tests has role makes the correct call and returns a valid string
         """
         self.role_mock.has_role.return_value = False
-        returned = self.action.user_has_role(*(NonCallableMock() for _ in range(4)))
+        returned = self.action.user_has_role(
+            *(NonCallableMock() for _ in range(4)), user_domain="default"
+        )
 
         assert returned[0] is False
         assert "does not have the specified" in returned[1]

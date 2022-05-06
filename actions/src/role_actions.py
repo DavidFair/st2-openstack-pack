@@ -2,6 +2,7 @@ from typing import Dict, Callable, Tuple
 
 from st2common.runners.base_action import Action
 
+from enums.user_domains import UserDomains
 from openstack_api.openstack_roles import OpenstackRoles
 
 
@@ -28,21 +29,24 @@ class RoleActions(Action):
         cloud_account: str,
         user_identifier: str,
         project_identifier: str,
-        role_identifier: str,
+        role: str,
+        user_domain: str,
     ) -> bool:
         """
         Add a given user a project role
         :param cloud_account: The account from the clouds configuration to use
         :param user_identifier: Name or ID of the user to assign a role to
         :param project_identifier: Name or ID of the project this applies to
-        :param role_identifier: Name or ID of the role to assign
+        :param role: Name or ID of the role to assign
+        :param user_domain: The domain the user is associated with
         :return: status
         """
         self._api.assign_role_to_user(
             cloud_account=cloud_account,
             user_identifier=user_identifier,
             project_identifier=project_identifier,
-            role_identifier=role_identifier,
+            role_identifier=role,
+            user_domain=UserDomains.from_string(user_domain),
         )
         return True  # the above method always returns None
 
@@ -52,21 +56,24 @@ class RoleActions(Action):
         cloud_account: str,
         user_identifier: str,
         project_identifier: str,
-        role_identifier: str,
+        role: str,
+        user_domain: str,
     ) -> bool:
         """
         Removes a project role from a given user
         :param cloud_account: The account from the clouds configuration to use
         :param user_identifier: Name or ID of the user to remove a role from
         :param project_identifier: Name or ID of the project this applies to
-        :param role_identifier: Name or ID of the role to remove
+        :param role: Name or ID of the role to remove
+        :param user_domain: The domain the user is associated with
         :return: status
         """
         self._api.remove_role_from_user(
             cloud_account=cloud_account,
             user_identifier=user_identifier,
             project_identifier=project_identifier,
-            role_identifier=role_identifier,
+            role_identifier=role,
+            user_domain=UserDomains.from_string(user_domain),
         )
         return True
 
@@ -76,21 +83,24 @@ class RoleActions(Action):
         cloud_account: str,
         user_identifier: str,
         project_identifier: str,
-        role_identifier: str,
+        role: str,
+        user_domain: str,
     ) -> Tuple[bool, str]:
         """
         Checks a given user has the specified role
         :param cloud_account: The account from the clouds configuration to use
         :param user_identifier: Name or ID of the user to check
         :param project_identifier: Name or ID of the project this applies to
-        :param role_identifier: Name or ID of the role to check
+        :param role: Name or ID of the role to check
+        :param user_domain: The domain the user is associated with
         :return: If the user has the role (bool)
         """
         found = self._api.has_role(
             cloud_account=cloud_account,
             user_identifier=user_identifier,
             project_identifier=project_identifier,
-            role_identifier=role_identifier,
+            role_identifier=role,
+            user_domain=UserDomains.from_string(user_domain),
         )
         out = (
             "The user has the specified role"

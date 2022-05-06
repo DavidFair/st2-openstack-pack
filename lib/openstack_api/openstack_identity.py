@@ -4,6 +4,7 @@ from openstack.exceptions import ConflictException
 from openstack.identity.v3.project import Project
 from openstack.identity.v3.user import User
 
+from enums.user_domains import UserDomains
 from exceptions.item_not_found_error import ItemNotFoundError
 from exceptions.missing_mandatory_param_error import MissingMandatoryParamError
 from openstack_api.openstack_wrapper_base import OpenstackWrapperBase
@@ -86,16 +87,27 @@ class OpenstackIdentity(OpenstackWrapperBase):
         with self._connection_cls(cloud_account) as conn:
             return conn.identity.find_project(project_identifier, ignore_missing=True)
 
-    def find_user(self, cloud_account: str, user_identifier: str) -> Optional[User]:
+    def find_user(
+        self, cloud_account: str, user_identifier: str, user_domain: UserDomains
+    ) -> Optional[User]:
         """
         Finds a user with the given name or ID
         :param cloud_account: The clouds entry to use
         :param user_identifier: The name or Openstack ID for the user
+        :param user_domain: The domain to search for the user in
         :return: The found user, or None
         """
         user_identifier = user_identifier.strip()
         if not user_identifier:
             raise MissingMandatoryParamError("A user name or ID must be provided")
 
+        domain = user_domain.value.lower().strip()
+        if not domain:
+            raise MissingMandatoryParamError("A domain name or ID must be provided")
+
         with self._connection_cls(cloud_account) as conn:
-            return conn.identity.find_user(user_identifier, ignore_missing=True)
+            domain_id = conn.identity.find_domain(domain, ignore_missing=False)
+
+            return conn.identity.find_user(
+                user_identifier, domain_id=domain_id.id, ignore_missing=True
+            )
