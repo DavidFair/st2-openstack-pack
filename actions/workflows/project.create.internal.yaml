@@ -34,20 +34,16 @@ tasks:
           - wait_for_default_security_group
           - create_security_group_http
           - create_security_group_https
-          # - create_rbac_policy
+          - create_rbac_policy
           - create_admin_roles
           - create_stfc_roles
 
-  #  create_rbac_policy:
-  #    action: stackstorm_openstack.network.rbac.create
-  #      cloud_account=<% ctx().cloud_account %>
-  #      rbac_action="shared"
-  #      network_identifier="<% ctx().network_name %>"
-  #      project_identifier=<% ctx().project_uuid %>
-  #    next:
-  #      - when: <% succeeded() %>
-  #        publish:
-  #          - stdout: "<% result().result %>"
+  create_rbac_policy:
+    action: stackstorm_openstack.network.rbac.create
+      cloud_account=<% ctx().cloud_account %>
+      rbac_action="shared"
+      network_identifier="<% ctx().network_name %>"
+      project_identifier=<% ctx().project_uuid %>
 
   wait_for_default_security_group:
     # We need to force Openstack to resync between the
