@@ -10,7 +10,8 @@ class RoleActions(Action):
     def __init__(self, *args, config: Dict = None, **kwargs):
         # DI handled in OpenstackActionTestCase
         super().__init__(*args, config=config, **kwargs)
-        self._api: OpenstackRoles = config.get("openstack_api", OpenstackRoles())
+        self._api: OpenstackRoles = config.get(
+            "openstack_api", OpenstackRoles())
 
     def run(self, submodule: str, **kwargs):
         """

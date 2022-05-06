@@ -10,14 +10,14 @@ parameters:
     type: string
   cloud_account:
     description: The clouds.yaml account to use whilst performing this action
-    default: ''
+    default: ""
     required: true
     type: string
   project_identifier:
     description: Project (Name or ID)
     required: true
     type: string
-  role_identifier:
+  role:
     description: Role to add (Name or ID)
     required: true
     type: string
