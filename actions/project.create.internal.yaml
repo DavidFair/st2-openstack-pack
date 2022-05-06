@@ -25,19 +25,4 @@ parameters:
     required: true
     type: array
     description: List of Users (stfc domain) (IDs or Names) to give local user access
-  default_network_internal_rules:
-    required: true
-    type: array
-    description: Network internal security rules
-    default: "{{ st2kv.system.default_network_internal_rules | decrypt_kv | from_json_string }}"
-  http_network_internal_rules:
-    required: true
-    type: array
-    description: Network internal HTTP security rules
-    default: "{{ st2kv.system.http_network_internal_rules | decrypt_kv | from_json_string }}"
-  https_network_internal_rules:
-    required: true
-    type: array
-    description: Network internal HTTPS security rules
-    default: "{{ st2kv.system.https_network_internal_rules | decrypt_kv | from_json_string }}"
 runner_type: orquesta

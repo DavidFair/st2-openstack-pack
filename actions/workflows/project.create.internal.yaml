@@ -6,14 +6,11 @@ input:
   - cloud_account
   - project_name
   - project_description
-  - network_name: Internal
   - admin_user_list
   - stfc_user_list
-  - default_network_internal_rules
-  - http_network_internal_rules
-  - https_network_internal_rules
 
 vars:
+  - network_name: "Internal"
   - project_uuid: null
   - stdout: null
   - stderr: null
@@ -34,47 +31,70 @@ tasks:
           - project_uuid: <% result().result.id %>
           - stdout: "<% result().result %>"
         do:
-          - create_rbac_policy
-        # - create_security_group_default
+          - wait_for_default_security_group
+        # - create_rbac_policy
         # - create_security_group_http
         # - create_security_group_https
         # - create_admin_roles
         # - create_stfc_roles
 
-  create_rbac_policy:
-    action: stackstorm_openstack.network.rbac.create
+#  create_rbac_policy:
+#    action: stackstorm_openstack.network.rbac.create
+#      cloud_account=<% ctx().cloud_account %>
+#      rbac_action="shared"
+#      network_identifier="<% ctx().network_name %>"
+#      project_identifier=<% ctx().project_uuid %>
+#    next:
+#      - when: <% succeeded() %>
+#        publish:
+#          - stdout: "<% result().result %>"
+
+  wait_for_default_security_group:
+    # We need to force Openstack to resync between the
+    # DB and Neutron by querying. This avoids the default
+    # SC not appearing until someone goes onto the web UI
+    action: stackstorm_openstack.security.group.list
       cloud_account=<% ctx().cloud_account %>
-      rbac_action="shared"
-      network_identifier=<% ctx().network_name %>
-      project_identifier=<% ctx().project_uuid %>
+      project_identifier=<% ctx().project_name %>
     next:
       - when: <% succeeded() %>
-        publish:
-          - stdout: "<% result().result %>"
+        do:
+          - allow_all_icmp_by_default
+          - allow_ssh_by_default
+          - allow_aquilon_notify_by_default
 
-  # create_security_group_default:
-  #   action: stackstorm_openstack.security.group.list project=<% ctx().project_name %>
-  #   next:
-  #     - when: <% succeeded() %>
-  #       do: create_security_group_rules_default
-  #     - when: <% failed() %>
-  #       publish: stderr="Failed creating default network for Project <% ctx().project_name %>"
-  #       do: fail
+  allow_all_icmp_by_default:
+    action: stackstorm_openstack.security.group.rule.create
+      cloud_account=<% ctx().cloud_account %>
+      project_identifier=<% ctx().project_uuid %>
+      security_group_identifier="default"
+      direction="ingress"
+      ether_type="IPV4"
+      protocol="ICMP"
+      start_port="*"
+      end_port="*"
 
-  # create_security_group_rules_default:
-  #   with: security_info in <% ctx(default_network_internal_rules) %>
-  #   action: stackstorm_openstack.security.group.rule.create
-  #     project=<% ctx().project_name %>
-  #     security_group="default"
-  #     direction=<% item(security_info).direction %>
-  #     ether_type=<% item(security_info).ether_type %>
-  #     protocol=<% item(security_info).protocol %>
-  #     remote_ip_prefix=<% item(security_info).remote_ip_prefix %>
-  #     dst_port=<% item(security_info).dst_port %>
-  #   next:
-  #     - when: <% failed() %>
-  #       publish: stderr="Failed creating Security Group Rules for 'Default' for Project <% ctx().project_name %>, Error <% result() %>"
-  #       do: fail
+  allow_ssh_by_default:
+    action: stackstorm_openstack.security.group.rule.create
+      cloud_account=<% ctx().cloud_account %>
+      project_identifier=<% ctx().project_uuid %>
+      security_group_identifier="default"
+      direction="ingress"
+      ether_type="IPV4"
+      protocol="TCP"
+      start_port="22"
+      end_port="22"
+
+  allow_aquilon_notify_by_default:
+    action: stackstorm_openstack.security.group.rule.create
+      cloud_account=<% ctx().cloud_account %>
+      project_identifier=<% ctx().project_uuid %>
+      security_group_identifier="default"
+      direction="ingress"
+      ether_type="IPV4"
+      protocol="UDP"
+      start_port="7777"
+      end_port="7777"
 
   # create_security_group_http:
   #   action: stackstorm_openstack.security.group.create

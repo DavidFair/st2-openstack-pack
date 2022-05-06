@@ -56,7 +56,9 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
             cloud_account, project_identifier=project_identifier
         )
         with self._connection_cls(cloud_account) as conn:
-            return list(conn.network.security_groups(project_id=project.id))
+            # We have to use tenant_id here to force Train to
+            # actually refresh the default security group for a new project
+            return list(conn.network.security_groups(tenant_id=project.id))
 
     def create_security_group(
         self,
@@ -101,7 +103,9 @@ class OpenstackSecurityGroups(OpenstackWrapperBase):
             cloud_account, details.project_identifier, details.security_group_identifier
         )
         if not security_group:
-            raise ItemNotFoundError("The security group specified was not found")
+            raise ItemNotFoundError(
+                f'The security group "{details.security_group_identifier}" was not found'
+            )
 
         start_port = str(details.port_range[0]).strip()
         end_port = str(details.port_range[1]).strip()

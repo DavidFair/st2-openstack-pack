@@ -1,5 +1,8 @@
 openstacksdk
-python-openstackclient
+# 5.8+ replaces tenant_id support which train still relies on
+# for various "side-effects" such as creating "default" security
+# groups....don't ask...
+python-openstackclient == 5.7.0
 tabulate
 requests
 dataclasses; python_version < '3.7'
