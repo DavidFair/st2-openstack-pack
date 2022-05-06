@@ -3,6 +3,7 @@ from unittest.mock import create_autospec, NonCallableMock
 from enums.user_domains import UserDomains
 from openstack_api.openstack_roles import OpenstackRoles
 from src.role_actions import RoleActions
+from structs.role_details import RoleDetails
 from tests.actions.openstack_action_test_base import OpenstackActionTestBase
 
 
@@ -29,12 +30,14 @@ class TestRoleActions(OpenstackActionTestBase):
         cloud = NonCallableMock()
         user, project, role = NonCallableMock(), NonCallableMock(), NonCallableMock()
         self.action.role_add(cloud, user, project, role, user_domain="StFC")
-        self.role_mock.assign_role_to_user.assert_called_once_with(
-            cloud_account=cloud,
+        expected_details = RoleDetails(
             user_identifier=user,
+            user_domain=UserDomains.STFC,
             project_identifier=project,
             role_identifier=role,
-            user_domain=UserDomains.STFC,
+        )
+        self.role_mock.assign_role_to_user.assert_called_once_with(
+            cloud_account=cloud, details=expected_details
         )
 
     def test_role_remove(self):
@@ -45,12 +48,14 @@ class TestRoleActions(OpenstackActionTestBase):
         role, project = NonCallableMock(), NonCallableMock()
         domain, user = "stfc", NonCallableMock()
         self.action.role_remove(cloud, user, project, role, domain)
-        self.role_mock.remove_role_from_user.assert_called_once_with(
-            cloud_account=cloud,
+        expected_details = RoleDetails(
             user_identifier=user,
+            user_domain=UserDomains.STFC,
             project_identifier=project,
             role_identifier=role,
-            user_domain=UserDomains.STFC,
+        )
+        self.role_mock.remove_role_from_user.assert_called_once_with(
+            cloud_account=cloud, details=expected_details
         )
 
     def test_has_role_true(self):
@@ -64,12 +69,14 @@ class TestRoleActions(OpenstackActionTestBase):
             cloud, user, project, role, user_domain="default"
         )
 
-        self.role_mock.has_role.assert_called_once_with(
-            cloud_account=cloud,
+        expected_details = RoleDetails(
             user_identifier=user,
+            user_domain=UserDomains.DEFAULT,
             project_identifier=project,
             role_identifier=role,
-            user_domain=UserDomains.DEFAULT,
+        )
+        self.role_mock.has_role.assert_called_once_with(
+            cloud_account=cloud, details=expected_details
         )
 
         assert returned[0] is True

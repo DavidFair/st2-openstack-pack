@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock, NonCallableMock, Mock, create_autospec
+from unittest.mock import patch, NonCallableMock, Mock, create_autospec
 
 from nose.tools import raises
 
@@ -30,7 +30,7 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests that an exception is thrown if the specified user is not found
         """
         self.identity_module.find_user.return_value = None
-        self.instance.assign_role_to_user(*(NonCallableMock() for _ in range(5)))
+        self.instance.assign_role_to_user(NonCallableMock(), NonCallableMock())
 
     @raises(ItemNotFoundError)
     def test_assign_roles_throws_missing_role(self):
@@ -38,7 +38,7 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests that an exception is thrown if the specified role is not found
         """
         self.instance.find_role = Mock(return_value=None)
-        self.instance.assign_role_to_user(*(NonCallableMock() for _ in range(5)))
+        self.instance.assign_role_to_user(NonCallableMock(), NonCallableMock())
 
     def test_assign_roles_makes_correct_call(self):
         """
@@ -46,17 +46,18 @@ class OpenstackRolesTests(unittest.TestCase):
         the assignment API
         """
         cloud = NonCallableMock()
-        project, role = NonCallableMock(), NonCallableMock()
-        user, domain = NonCallableMock(), NonCallableMock()
+        details = NonCallableMock()
 
         self.instance.find_role = Mock()
-        self.instance.assign_role_to_user(cloud, user, project, role, domain)
+        self.instance.assign_role_to_user(cloud, details)
 
         self.identity_module.find_mandatory_project.assert_called_once_with(
-            cloud, project
+            cloud, details.project_identifier
         )
-        self.identity_module.find_user.assert_called_once_with(cloud, user, domain)
-        self.instance.find_role.assert_called_once_with(cloud, role)
+        self.identity_module.find_user.assert_called_once_with(
+            cloud, details.user_identifier, details.user_domain
+        )
+        self.instance.find_role.assert_called_once_with(cloud, details.role_identifier)
 
         self._api.assign_project_role_to_user.assert_called_once_with(
             project=self.identity_module.find_mandatory_project.return_value,
@@ -89,7 +90,7 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests remove role throws if the user was not found
         """
         self.identity_module.find_user.return_value = None
-        self.instance.remove_role_from_user(*(NonCallableMock() for _ in range(5)))
+        self.instance.remove_role_from_user(NonCallableMock(), NonCallableMock())
 
     @raises(ItemNotFoundError)
     def test_remove_role_throws_role_not_found(self):
@@ -97,7 +98,7 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests remove role throws if the role was not found
         """
         self.instance.find_role = Mock(return_value=None)
-        self.instance.remove_role_from_user(*(NonCallableMock() for _ in range(5)))
+        self.instance.remove_role_from_user(NonCallableMock(), NonCallableMock())
 
     def test_remove_roles_makes_correct_call(self):
         """
@@ -105,17 +106,18 @@ class OpenstackRolesTests(unittest.TestCase):
         the unassign API
         """
         cloud = NonCallableMock()
-        project, role = NonCallableMock(), NonCallableMock()
-        user, domain = NonCallableMock(), NonCallableMock()
+        details = NonCallableMock()
 
         self.instance.find_role = Mock()
-        self.instance.remove_role_from_user(cloud, user, project, role, domain)
+        self.instance.remove_role_from_user(cloud, details)
 
         self.identity_module.find_mandatory_project.assert_called_once_with(
-            cloud, project
+            cloud, details.project_identifier
         )
-        self.identity_module.find_user.assert_called_once_with(cloud, user, domain)
-        self.instance.find_role.assert_called_once_with(cloud, role)
+        self.identity_module.find_user.assert_called_once_with(
+            cloud, details.user_identifier, details.user_domain
+        )
+        self.instance.find_role.assert_called_once_with(cloud, details.role_identifier)
 
         self._api.unassign_project_role_from_user.assert_called_once_with(
             project=self.identity_module.find_mandatory_project.return_value,
@@ -129,7 +131,7 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests has role throws if the user was not found
         """
         self.identity_module.find_user.return_value = None
-        self.instance.has_role(*(NonCallableMock() for _ in range(5)))
+        self.instance.has_role(NonCallableMock(), NonCallableMock())
 
     @raises(ItemNotFoundError)
     def test_has_role_throws_role_not_found(self):
@@ -137,24 +139,25 @@ class OpenstackRolesTests(unittest.TestCase):
         Tests has role throws if the role was not found
         """
         self.instance.find_role = Mock(return_value=None)
-        self.instance.has_role(*(NonCallableMock() for _ in range(5)))
+        self.instance.has_role(NonCallableMock(), NonCallableMock())
 
     def test_has_roles_makes_correct_call(self):
         """
         Tests that has forwards the result
         """
         cloud = NonCallableMock()
-        project, role = NonCallableMock(), NonCallableMock()
-        user, domain = NonCallableMock(), NonCallableMock()
+        details = NonCallableMock()
 
         self.instance.find_role = Mock()
-        returned = self.instance.has_role(cloud, user, project, role, domain)
+        returned = self.instance.has_role(cloud, details)
 
         self.identity_module.find_mandatory_project.assert_called_once_with(
-            cloud, project
+            cloud, details.project_identifier
         )
-        self.identity_module.find_user.assert_called_once_with(cloud, user, domain)
-        self.instance.find_role.assert_called_once_with(cloud, role)
+        self.identity_module.find_user.assert_called_once_with(
+            cloud, details.user_identifier, details.user_domain
+        )
+        self.instance.find_role.assert_called_once_with(cloud, details.role_identifier)
 
         self._api.validate_user_has_role.assert_called_once_with(
             project=self.identity_module.find_mandatory_project.return_value,

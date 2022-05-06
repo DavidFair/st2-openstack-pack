@@ -14,4 +14,7 @@ class UserDomains(_AutoName):
 
     @staticmethod
     def from_string(val: str):
+        """
+        Converts a given string in a case-insensitive way to the enum values
+        """
         return UserDomains[val.upper()]

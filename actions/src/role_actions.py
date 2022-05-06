@@ -4,14 +4,14 @@ from st2common.runners.base_action import Action
 
 from enums.user_domains import UserDomains
 from openstack_api.openstack_roles import OpenstackRoles
+from structs.role_details import RoleDetails
 
 
 class RoleActions(Action):
     def __init__(self, *args, config: Dict = None, **kwargs):
         # DI handled in OpenstackActionTestCase
         super().__init__(*args, config=config, **kwargs)
-        self._api: OpenstackRoles = config.get(
-            "openstack_api", OpenstackRoles())
+        self._api: OpenstackRoles = config.get("openstack_api", OpenstackRoles())
 
     def run(self, submodule: str, **kwargs):
         """
@@ -24,7 +24,7 @@ class RoleActions(Action):
         return func(**kwargs)
 
     # TODO Show all roles on a project
-    # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code, too-many-arguments
     def role_add(
         self,
         cloud_account: str,
@@ -42,16 +42,16 @@ class RoleActions(Action):
         :param user_domain: The domain the user is associated with
         :return: status
         """
-        self._api.assign_role_to_user(
-            cloud_account=cloud_account,
+        details = RoleDetails(
             user_identifier=user_identifier,
             project_identifier=project_identifier,
             role_identifier=role,
             user_domain=UserDomains.from_string(user_domain),
         )
+        self._api.assign_role_to_user(cloud_account=cloud_account, details=details)
         return True  # the above method always returns None
 
-    # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code, too-many-arguments
     def role_remove(
         self,
         cloud_account: str,
@@ -69,16 +69,16 @@ class RoleActions(Action):
         :param user_domain: The domain the user is associated with
         :return: status
         """
-        self._api.remove_role_from_user(
-            cloud_account=cloud_account,
+        details = RoleDetails(
             user_identifier=user_identifier,
             project_identifier=project_identifier,
             role_identifier=role,
             user_domain=UserDomains.from_string(user_domain),
         )
+        self._api.remove_role_from_user(cloud_account=cloud_account, details=details)
         return True
 
-    # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code, too-many-arguments
     def user_has_role(
         self,
         cloud_account: str,
@@ -96,13 +96,13 @@ class RoleActions(Action):
         :param user_domain: The domain the user is associated with
         :return: If the user has the role (bool)
         """
-        found = self._api.has_role(
-            cloud_account=cloud_account,
+        details = RoleDetails(
             user_identifier=user_identifier,
             project_identifier=project_identifier,
             role_identifier=role,
             user_domain=UserDomains.from_string(user_domain),
         )
+        found = self._api.has_role(cloud_account=cloud_account, details=details)
         out = (
             "The user has the specified role"
             if found
