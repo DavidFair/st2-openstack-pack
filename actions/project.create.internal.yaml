@@ -20,7 +20,9 @@ parameters:
   admin_user_list:
     required: true
     type: array
-    description: List of Users (IDs or Names) to give administrator access
+    items:
+      type: string
+    description: Comma seperated list of Users (IDs or Names) to assign administrator access to
   stfc_user_list:
     required: true
     type: array

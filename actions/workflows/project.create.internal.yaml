@@ -34,8 +34,8 @@ tasks:
           - wait_for_default_security_group
           - create_security_group_http
           - create_security_group_https
-        # - create_rbac_policy
-        # - create_admin_roles
+          # - create_rbac_policy
+          - create_admin_roles
         # - create_stfc_roles
 
   #  create_rbac_policy:
@@ -152,26 +152,21 @@ tasks:
       start_port="443"
       end_port="443"
 
-  # create_admin_roles:
-  #   with: <% ctx(admin_user_list) %>
-  #   action: stackstorm_openstack.role.add
-  #     project=<% ctx().project_name %>
-  #     role="admin"
-  #     user=<% item() %>
-  #     user_domain="default"
-  #   next:
-  #     - when: <% failed() %>
-  #       publish: stderr="Failed assigning admin roles for Project <% ctx().project_name %>, Error <% result() %>"
-  #       do: fail
-
-  # create_stfc_roles:
-  #   with: <% ctx(stfc_user_list) %>
-  #   action: stackstorm_openstack.role.add
-  #     project=<% ctx().project_name %>
-  #     role="user"
-  #     user=<% item() %>
-  #     user_domain="stfc"
-  #   next:
-  #     - when: <% failed() %>
-  #       publish: stderr="Failed assigning user(stfc) roles for Project <% ctx().project_name %>, Error <% result() %>"
-  #       do: fail
+  create_admin_roles:
+    with: <% ctx(admin_user_list) %>
+    action: stackstorm_openstack.role.add
+      cloud_account=<% ctx().cloud_account %>
+      project_identifier=<% ctx().project_uuid %>
+      role_identifier="admin"
+      user_identifier=<% item() %>
+#  create_stfc_roles:
+#   with: <% ctx(stfc_user_list) %>
+#   action: stackstorm_openstack.role.add
+#     project=<% ctx().project_name %>
+#     role="user"
+#     user=<% item() %>
+#     user_domain="stfc"
+#   next:
+#     - when: <% failed() %>
+#       publish: stderr="Failed assigning user(stfc) roles for Project <% ctx().project_name %>, Error <% result() %>"
+#       do: fail
