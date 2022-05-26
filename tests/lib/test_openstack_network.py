@@ -1,3 +1,4 @@
+import ipaddress
 import unittest
 from unittest.mock import NonCallableMock, Mock, ANY, MagicMock, patch
 
@@ -376,3 +377,146 @@ class OpenstackNetworkTests(unittest.TestCase):
             ignore_missing=True,
         )
         assert returned == self.network_api.find_router.return_value
+
+    @raises(ItemNotFoundError)
+    def test_get_used_subnet_nets_throws_missing_network(self):
+        """
+        Tests the ItemNotFound error is thrown if a non-existent network is specified
+        """
+        cloud, network = NonCallableMock(), NonCallableMock()
+        self.instance.find_network = Mock(return_value=None)
+        self.instance.get_used_subnet_nets(cloud, network)
+
+    def test_get_used_subnet_nets(self):
+        """
+        Tests that get used subnet nets returns the expected results
+        """
+        self.instance.find_network = Mock()
+        cloud, network = NonCallableMock(), NonCallableMock()
+
+        subnet_1 = NonCallableMock()
+        subnet_2 = NonCallableMock()
+
+        subnet_1.gateway_ip = "192.168.134.1"
+        subnet_2.gateway_ip = "10.0.123.7"
+
+        self.network_api.subnets.return_value = [subnet_1, subnet_2]
+        result = self.instance.get_used_subnet_nets(cloud, network)
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.network_api.subnets.assert_called_once_with(
+            network_id=self.instance.find_network.return_value.id
+        )
+        assert result == [
+            ipaddress.ip_network("192.168.134.0/24"),
+            ipaddress.ip_network("10.0.123.0/24"),
+        ]
+
+    def test_get_used_subnet_nets_no_subnets(self):
+        """
+        Tests that get used subnet nets handles an empty network
+        """
+        self.instance.find_network = Mock()
+        cloud, network = NonCallableMock(), NonCallableMock()
+
+        self.network_api.subnets.return_value = []
+        result = self.instance.get_used_subnet_nets(cloud, network)
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.network_api.subnets.assert_called_once_with(
+            network_id=self.instance.find_network.return_value.id
+        )
+        assert result == []
+
+    def test_select_random_subnet(self):
+        """
+        Tests create subnet correctly filters out used subnets
+        """
+        cloud, network = NonCallableMock(), NonCallableMock()
+
+        # Force our random selection to always give us 32
+        used_networks = [
+            ipaddress.ip_network(f"192.168.{i}.0/24")
+            for i in range(1, 255)
+            if i is not 32
+        ]
+        self.instance.get_used_subnet_nets = Mock(return_value=used_networks)
+
+        subnet = self.instance.select_random_subnet(cloud, network)
+        self.instance.get_used_subnet_nets.assert_called_once_with(cloud, network)
+        assert subnet == ipaddress.ip_network("192.168.32.0/24")
+
+    def test_select_random_does_not_pass_in_used_subnets(self):
+        """
+        Tests create subnet correctly filters out used subnets before calling random
+        """
+        cloud, network = NonCallableMock(), NonCallableMock()
+
+        # Force our random selection to always give us 32
+        used_networks = [
+            ipaddress.ip_network(f"192.168.{i}.0/24") for i in range(1, 100)
+        ]
+        self.instance.get_used_subnet_nets = Mock(return_value=used_networks)
+
+        with patch("openstack_api.openstack_network.random.choice") as mocked_choice:
+            self.instance.select_random_subnet(cloud, network)
+            mocked_choice.assert_called_once()
+            assert used_networks not in mocked_choice.call_args[0][0]
+
+    @raises(ItemNotFoundError)
+    def test_select_random_subnet_no_subnets(self):
+        """
+        Tests select random subnet throws ItemNotFoundError if not subnets are found
+        """
+        used_subnets = [
+            ipaddress.ip_network(f"192.168.{i}.0/24") for i in range(1, 255)
+        ]
+        self.instance.get_used_subnet_nets = Mock(return_value=used_subnets)
+        self.instance.select_random_subnet(NonCallableMock(), NonCallableMock())
+
+    def test_create_subnet(self):
+        """
+        Tests create subnet creates a subnet
+        """
+        expected_net = "192.168.37"
+        self.instance.find_network = Mock()
+        self.instance.select_random_subnet = Mock(
+            return_value=ipaddress.ip_network(f"{expected_net}.0/24")
+        )
+
+        cloud, network, dhcp = NonCallableMock(), NonCallableMock(), NonCallableMock()
+        name, description = NonCallableMock(), NonCallableMock()
+        returned = self.instance.create_subnet(cloud, network, name, description, dhcp)
+
+        self.mocked_connection.assert_called_once_with(cloud)
+        self.instance.select_random_subnet.assert_called_once_with(
+            cloud, self.instance.find_network.return_value.id
+        )
+        self.network_api.create_subnet.assert_called_once_with(
+            ip_version=4,
+            network_id=self.instance.find_network.return_value.id,
+            allocation_pools=[
+                {"start": f"{expected_net}.11", "end": f"{expected_net}.254"}
+            ],
+            cidr=f"{expected_net}.0/24",
+            gateway_ip=f"{expected_net}.1",
+            name=name,
+            description=description,
+            is_dhcp_enabled=dhcp,
+        )
+
+        assert returned == self.network_api.create_subnet.return_value
+
+    @raises(ItemNotFoundError)
+    def test_create_subnet_network_not_found(self):
+        """
+        Tests that create subnet throws if the network specified does not exist
+        """
+        self.instance.find_network = Mock(return_value=None)
+        self.instance.create_subnet(
+            NonCallableMock(),
+            NonCallableMock(),
+            NonCallableMock(),
+            NonCallableMock(),
+            NonCallableMock(),
+        )

@@ -8,18 +8,22 @@ parameters:
     default: subnet_create
     immutable: True
     type: string
+  cloud_account:
+    description: The clouds.yaml account to use whilst performing this action
+    required: true
+    type: string
   network:
     required: True
     description: Network for subnet (Name or ID)
     type: string
-  name:
+  subnet_name:
     required: True
     description: Subnet Name
     type: string
-  description:
+  subnet_description:
     description: Subnet description
     type: string
-  is_dhcp_enabled:
+  dhcp_enabled:
     required: True
     description: 'Set to True if DHCP is enabled and False if DHCP is disabled. Type: bool'
     type: boolean

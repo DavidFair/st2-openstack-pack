@@ -1,3 +1,5 @@
+import ipaddress
+import random
 from typing import Optional, List
 
 from openstack.exceptions import ResourceNotFound
@@ -5,6 +7,7 @@ from openstack.network.v2.floating_ip import FloatingIP
 from openstack.network.v2.network import Network
 from openstack.network.v2.rbac_policy import RBACPolicy
 from openstack.network.v2.router import Router
+from openstack.network.v2.subnet import Subnet
 
 from enums.rbac_network_actions import RbacNetworkActions
 from exceptions.item_not_found_error import ItemNotFoundError
@@ -230,4 +233,82 @@ class OpenstackNetwork(OpenstackWrapperBase):
         with self._connection_cls(cloud_account) as conn:
             return conn.network.find_router(
                 name_or_id=router_identifier, project_id=project.id, ignore_missing=True
+            )
+
+    def get_used_subnet_nets(
+        self, cloud_account: str, network_identifier: str
+    ) -> List[ipaddress.IPv4Network]:
+        """
+        Gets the subnets associated with a given network
+        :param cloud_account: The associated credentials to use
+        :param network_identifier: The network to search
+        :return: A list of found network addresses
+        """
+        network = self.find_network(cloud_account, network_identifier)
+        if not network:
+            raise ItemNotFoundError("The network specified was not found")
+
+        with self._connection_cls(cloud_account) as conn:
+            subnets = [
+                subnet.gateway_ip
+                for subnet in conn.network.subnets(network_id=network.id)
+            ]
+
+        # Force to a /24 network
+        return [ipaddress.ip_network(i + "/24", strict=False) for i in subnets]
+
+    def select_random_subnet(
+        self, cloud_account: str, network_identifier: str
+    ) -> ipaddress.IPv4Network:
+        """
+        Selects a random subnet from the given network that isn't used
+        :param cloud_account: The associated credentials to use
+        :param network_identifier: The network to search
+        :return: A randomly selected subnet
+        """
+        avail = [ipaddress.ip_network(f"192.168.{i}.0/24") for i in range(1, 255)]
+
+        used_subnets = self.get_used_subnet_nets(cloud_account, network_identifier)
+        avail = [i for i in avail if i not in used_subnets]
+        if not avail:
+            raise ItemNotFoundError("No available subnets")
+        return random.choice(avail)
+
+    def create_subnet(
+        self,
+        cloud_account: str,
+        network: str,
+        subnet_name: str,
+        subnet_description: str,
+        dhcp_enabled: bool,
+    ) -> Subnet:
+        """
+        Adds a new subnet with a randomly selected 192.168.x.0/24 to a given network
+        :param cloud_account: The associated credentials to use
+        :param network: The network to add the new subnet to
+        :param subnet_name: The new subnet name
+        :param subnet_description: The new subnet description
+        :param dhcp_enabled: Whether to enable DHCP on the new subnet
+        :return: The newly created subnet object
+        """
+        network = self.find_network(cloud_account, network)
+        if not network:
+            raise ItemNotFoundError("The network specified was not found")
+
+        selected_subnet = self.select_random_subnet(cloud_account, network.id)
+        hosts = [str(i) for i in selected_subnet.hosts()]
+        # Check our first entry is the gateway
+        assert hosts[0].endswith(".1")
+
+        with self._connection_cls(cloud_account) as conn:
+            return conn.network.create_subnet(
+                ip_version=4,
+                network_id=network.id,
+                # Reserve the first 10 addresses from DHCP allocation
+                allocation_pools=[{"start": hosts[10], "end": hosts[-1]}],
+                cidr=str(selected_subnet),
+                gateway_ip=hosts[0],
+                name=subnet_name,
+                description=subnet_description,
+                is_dhcp_enabled=dhcp_enabled,
             )
